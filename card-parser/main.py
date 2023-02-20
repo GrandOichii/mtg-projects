@@ -5,8 +5,8 @@ CARDNAME_TEXT = '[CARDNAME]'
 # cards = read_cards('../oracle_cards.json')
 # save_cards('test_cards.json', cards[:1000])
 
-WHENEVER_IF_MATCHER = 'Whenever (.*), if (.*), (.*)'
-WHENEVER_MATCHER = 'Whenever (.*), (.*)'
+WHENEVER_IF_MATCHER = 'whenever (.*), if (.*), (.*)'
+WHENEVER_MATCHER = 'whenever (.*), (.*)'
 REMINDER_TEXT_FINDER = '(\(.*\))'
 
 FLAVOR_WORDS = open('flavor_words.txt', 'r').read().split('\n')
@@ -52,9 +52,12 @@ def remove_flavor_words(card: dict, text: str) -> str:
 def basic_replace(text: str, words: list[str], format: str):
     result = text
     for word in words:
+        r = f'\\b{word}\\b'
+
         fmt = format.format(word)
-        fmt = f'[creature_type:{word}]'
-        result = result.replace(f'{word} ', f'{fmt} ').replace(f'{word}\n', f'{fmt}\n').replace(']s', ']')
+        # print('\t', r, fmt)
+        result = re.sub(r, fmt, result)
+        # result = result.replace(f'{word} ', f'{fmt} ').replace(f'{word}\n', f'{fmt}\n').replace(']s', ']')
     return result
 
 def remove_reminder_text(card: dict, text: str) -> str:
@@ -104,7 +107,17 @@ tp = TextPipeline([
 for card in cards:
     text = tp.do(card)
     if not 'oracle_text' in card: continue
-    if not 'where x is ' in text: continue
+    # if not 'where x is ' in text: continue
 
     print(text)
-    print()
+    print('lines:')
+    for line in text.split('\n'):
+        print('\t', line)
+        m = re.match(WHENEVER_IF_MATCHER, line)
+        if m:
+            print(m.groups())
+        else:
+            m = re.match(WHENEVER_MATCHER, line)
+            if m:
+                print(m.groups())
+    print('======')
