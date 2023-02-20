@@ -1,3 +1,5 @@
+from termcolor import colored
+from parsers import *
 from util import *
 import re
 
@@ -103,21 +105,37 @@ tp = TextPipeline([
     ('keyword ability formatting', format_keyword_abilities)
 ])
 
+amount = 100
+parsed_count = 0
+for card in cards[:amount]:
+    result = parse_card(card)
+    if not result:
+        print(colored('Failed to parse', 'red'), colored(card['name'], 'yellow'))
+        continue
+    parsed_count += 1
+    print(colored('Parsed card', 'green'), colored(card['name'], 'yellow'))
+    print(json.dumps(result, indent=4))
+len = 50
+good = int(parsed_count / amount * len)
+print('Parsed: ', colored('|' * good, 'green'), colored('|' * (len - good), 'red'), f' ({amount})', sep='')
+    # text = tp.do(card)
+    # if not 'oracle_text' in card: continue
+    # # if not 'where x is ' in text: continue
 
-for card in cards:
-    text = tp.do(card)
-    if not 'oracle_text' in card: continue
-    # if not 'where x is ' in text: continue
 
-    print(text)
-    print('lines:')
-    for line in text.split('\n'):
-        print('\t', line)
-        m = re.match(WHENEVER_IF_MATCHER, line)
-        if m:
-            print(m.groups())
-        else:
-            m = re.match(WHENEVER_MATCHER, line)
-            if m:
-                print(m.groups())
-    print('======')
+    # for line in text.split('\n'):
+    #     when_t = None
+    #     condition_t = None
+    #     effect_t = None
+
+    #     m = re.match(WHENEVER_IF_MATCHER, line)
+    #     if m:
+    #         print('\t', line)
+    #         print(m.groups())
+    #     else:
+    #         m = re.match(WHENEVER_MATCHER, line)
+    #         if m:
+    #             print('\t', line)
+    #             print(m.groups())
+    # print(text)
+    # print('======')

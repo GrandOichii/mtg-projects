@@ -1,0 +1,4 @@
+Effect: <stuff to do>
+Activated ability: <cost>: |Effect|
+Trigger: whenever <something happens>, |Effect|
+Trigger (conditional): whenever <something happens>, if <condition>, |Effect|
