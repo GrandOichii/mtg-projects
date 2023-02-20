@@ -49,6 +49,14 @@ def remove_flavor_words(card: dict, text: str) -> str:
         result += [r]
     return '\n'.join(result)
 
+def basic_replace(text: str, words: list[str], format: str):
+    result = text
+    for word in words:
+        fmt = format.format(word)
+        fmt = f'[creature_type:{word}]'
+        result = result.replace(f'{word} ', f'{fmt} ').replace(f'{word}\n', f'{fmt}\n').replace(']s', ']')
+    return result
+
 def remove_reminder_text(card: dict, text: str) -> str:
     m = re.findall(REMINDER_TEXT_FINDER, text)
     if not m: return text
@@ -58,25 +66,13 @@ def remove_reminder_text(card: dict, text: str) -> str:
     return text
 
 def replace_creature_types(card: dict, text: str) -> str:
-    result = text
-    for ct in CREATURE_TYPES:
-        fmt = f'[creature_type:{ct}] '
-        result = result.replace(f'{ct} ', fmt).replace(']s', ']')
-    return result
+    return basic_replace(text, CREATURE_TYPES, '[creature_type:{}]')
 
 def replace_land_types(card: dict, text: str) -> str:
-    result = text
-    for ct in LAND_TYPES:
-        fmt = f'[land_type:{ct}] '
-        result = result.replace(f'{ct} ', fmt).replace(']s', ']')
-    return result
+    return basic_replace(text, LAND_TYPES, '[land_type:{}]')
 
 def format_keyword_abilities(card: dict, text: str) -> str:
-    result = text
-    for ct in KEYWORD_ABILITIES:
-        fmt = f'[keyword_ability:{ct}] '
-        result = result.replace(f'{ct} ', fmt).replace(']s', ']')
-    return result
+    return basic_replace(text, KEYWORD_ABILITIES, '[keyword_ability:{}]')
 
 class Pipeline:
     def __init__(self, stages: list[tuple[str, any]]) -> None:
