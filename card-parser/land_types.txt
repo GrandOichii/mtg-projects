@@ -1,0 +1,14 @@
+desert
+forest
+gate
+island
+lair
+locus
+mine
+mountain
+plains
+power-plant
+sphere
+swamp
+tower
+urza’s

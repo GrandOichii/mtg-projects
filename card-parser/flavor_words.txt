@@ -1,0 +1,321 @@
+join forces
+domain
+corrupted
+acid breath
+animate walking statue
+antimagic cone
+archery
+bardic inspiration
+beacon of hope
+bear form
+befriend them
+bewitching whispers
+binding contract
+brave the stench
+break their chains
+charge them
+clever conjurer
+climb over
+combat inspiration
+cold breath
+cone of cold
+cunning action
+cure wounds
+dispel magic
+displacement
+dissolve
+distract the guard
+divine intervention
+dominate monster
+drag below
+engulf
+fear ray
+fend them off
+fight the current
+find a crossing
+flurry of blows
+foil their scheme
+form a party
+gentle repose
+grant an advantage
+hide
+interrogate them
+intimidate them
+journey on
+keen senses
+learn their secrets
+life drain
+lift the curse
+lightning breath
+magical tinkering
+make a retreat
+make camp
+poison breath
+pry it open
+psionic spells
+rappel down
+rejuvenation
+rouse the party
+search the body
+search the room
+set off traps
+siege monster
+smash it
+smash the chest
+song of rest
+split
+stand and fight
+start a brawl
+steal its eyes
+stunning strike
+tail spikes
+teleport
+tie up
+tragic backstory
+trapped!
+two-weapon fighting
+whirlwind
+whispers of the grave
+wild magic surge
+astral projection
+berserk
+breathe flame
+create undead
+enrage
+focus beam
+mystic arcanum
+negative energy cone
+pact boon
+perfect illumination
+smash relics
+electric thunder
+fierce punch
+flash kick
+hadoken
+hundred hand slap
+iron muscle
+lightning kick
+rolling attack
+teleport
+shoryuken
+sonic boom
+spinning piledriver
+sumo spirit
+animate chains
+avoidance
+bigby’s hand
+blood drain
+body thief
+bribe the guards
+call for aid
+ceremorphosis
+confounding clouds
+conjure elemental
+crown of madness
+death ray
+devour intellect
+disintegration ray
+enthralling performance
+feed
+friends
+gathered swarm
+gather your courage
+gust of wind
+homunculus servant
+infesting spores
+keen sight
+lure the unwary
+mama's coming
+mantle of inspiration
+mold harvest
+natural recovery
+natural shelter
+pray for protection
+protection fighting style
+psychic blades
+psychic defense
+run and hide
+scorching ray
+sleight of hand
+spiked retribution
+stall for time
+strike a deal
+threaten the merchant
+toxic spores
+vicious mockery
+weird insight
+wind walk
+aberrant tinkering
+buy information
+hire a mercenary
+hive mind
+horrific symbiosis
+loud ruckus
+mold earth
+probing telepathy
+project image
+sell contraband
+aim for the wyvern
+aim for the cursed amulet
+calim breath
+fire a warning shot
+gift of tiamat
+molting exoskeleton
+psionic adept
+rage beyond death
+rejuvenation
+wild shape
+a thousand souls die every day
+advanced species
+aegis of the emperor
+allure of slaanesh
+arcane life-support
+architect of deception
+armor of shrieking souls
+atomic transmutation
+battle cannon
+benediction of omnissiah
+berzerker
+the betrayer
+bio-plasmic barrage
+bio-plasmic scream
+blade of magnus
+blood chalice
+bring it down!
+brood telepathy
+chainsword
+chapter master
+children of the cult
+command protocols
+command section
+concealed position
+coruscating flames
+crushing teeth
+curse of the walking pox
+daemon sword
+death frenzy
+devastating charge
+devourer of souls
+devouring monster
+drain life
+dynastic advisor
+dynastic codes
+dynastic command node
+echo of the first murder
+elite troops
+endless swarm
+endurant
+enmitic exterminator
+eternity gate
+executioner round
+exile cannon
+fabricator claw array
+fallen warrior
+fast healing
+feeder mandibles
+field reprogramming
+fire of tzeentch
+flesh flayer
+flesh hooks
+frenzied metabolism
+frenzied rampage
+gatling blaster
+genestealer’s kiss
+genomic enhancement
+gift of chaos
+grand strategist
+grav-cannon
+guardian patrols
+harbinger of despair
+healing tears
+heavy power hammer
+heavy rock cutter
+hunt for heresy
+hyperfang round
+hyperphase threshers
+hypertoxic miasma
+inquisition agents
+invasion beams
+jolly gutpipes
+leading from the front
+locus of slaanesh
+lord of chaos
+lord of the pyrrhian legions
+lord of torment
+mark of the chaos ascendant
+martyrdom
+master of machines
+master tactician
+matter absorption
+medicus ministorum
+multi-threat eliminator
+my will be done
+neurotraumal rod
+phaeron
+phalanx commander
+pheromone trail
+plasma incinerator
+polymorphine
+praesidium protectiva
+primarch of the death guard
+prince of chaos
+prismatic gallery
+proclamator hailer
+protector
+psychic abomination
+psychic stimulus
+rapacious hunger
+rapid regeneration
+rapid-fire battle cannon
+relentless mind
+repair barge
+revolt
+reverberating summons
+rites of banishment
+rogue trader
+rosarius
+rot fly
+ruinous ascension
+sarcophagus
+scavenge the dead
+secrets of the soul
+the seven-fold chant
+shieldwall
+shrieking gargoyles
+sigil of corruption
+skilled outrider
+skyswarm
+sonic blaster
+sorcerous elixir
+sorcerous inspiration
+spawn termagants
+sphere of the void dragon
+spiritual leader
+split
+spore chimney
+stowage
+strategic coordinator
+strive
+subterranean assault
+summary execution
+suppressing fire
+symphony of pain
+synapse creature
+synaptic disintegrator
+targeting relay
+terror from the deep
+three autostubs
+titanic
+transdimensional scout
+translocation protocols
+ultima founding
+unearthly power
+unquestionable wisdom
+vanguard species
+veil of time
+void shields
+warp blast
+the will of the hive mind
+warp vortex
+wraith form
+xenos cunning
