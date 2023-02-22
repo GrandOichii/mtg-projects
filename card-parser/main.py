@@ -105,19 +105,37 @@ tp = TextPipeline([
     ('keyword ability formatting', format_keyword_abilities)
 ])
 
-amount = 100
-parsed_count = 0
-for card in cards[:amount]:
-    result = parse_card(card)
+# parsed_count = 0
+# for card in cards[:amount]:
+#     result = parse_card(card)
+#     if not result:
+#         print(colored('Failed to parse', 'red'), colored(card['name'], 'yellow'))
+#         continue
+#     parsed_count += 1
+#     print(colored('Parsed card', 'green'), colored(card['name'], 'yellow'))
+#     print(json.dumps(result, indent=4))
+# len = 50
+# good = int(parsed_count / amount * len)
+# print('Parsed: ', colored('|' * good, 'green'), colored('|' * (len - good), 'red'), f' ({amount})', sep='')
+
+def f(item: dict):
+    if not 'oracle_text' in item: return True
+
+    orig_text = item['oracle_text']
+    fmt_text = text_pipeline.get_fmt_text(orig_text, item)
+    if ']s' in fmt_text:
+        print(fmt_text)
+    double_text = text_pipeline.get_orig_text(fmt_text, item)
+    result = orig_text == double_text
+    
     if not result:
-        print(colored('Failed to parse', 'red'), colored(card['name'], 'yellow'))
-        continue
-    parsed_count += 1
-    print(colored('Parsed card', 'green'), colored(card['name'], 'yellow'))
-    print(json.dumps(result, indent=4))
-len = 50
-good = int(parsed_count / amount * len)
-print('Parsed: ', colored('|' * good, 'green'), colored('|' * (len - good), 'red'), f' ({amount})', sep='')
+        print(colored(orig_text, 'green'))
+        print(colored(double_text, 'red'))
+        print()
+    return result
+
+# print_correctness(cards[:amount], lambda item: parse_card(item) != None, 50)
+print_correctness(cards[:100], f, 50)
     # text = tp.do(card)
     # if not 'oracle_text' in card: continue
     # # if not 'where x is ' in text: continue
