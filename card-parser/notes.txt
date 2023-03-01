@@ -1,4 +1,28 @@
-Effect: <stuff to do>
-Activated ability: <cost>: |Effect|
-Trigger: whenever <something happens>, |Effect|
-Trigger (conditional): whenever <something happens>, if <condition>, |Effect|
+// Draw -> you draw
+
+{card structure}
+// ! - required
+
+Creature/Enchantment/Artifact/Land/Planeswalker
+    [trigger]
+    [activated_ability]
+
+Instant/Sorcery
+    !effect
+    [trigger]
+    [activated_ability]
+
+{objects}
+
+trigger:
+    - (Whenever|When) <when>, <effect>.
+    - (Whenever|When) <when>, if <condition>, <effect>.
+
+    - At the <when>, <effect>.
+    - At the <when>, if <condition>, <effect>.
+
+activated_ability:
+    - <cost>: <effect>.
+
+cost:
+    - 

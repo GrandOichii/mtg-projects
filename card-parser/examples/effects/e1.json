@@ -1,0 +1,38 @@
+[{
+    "original_text": "You gain 2 life.",
+    "fmt_text": "you gain 2 life.",
+
+    "effects": [
+        {
+            "effect_type": "life_gain",
+            
+            "who": {
+                "player_type": "controller"
+            },
+
+            "amount": {
+                "amount_type": "numeric",
+                "amount": 2
+            }
+        }
+    ]
+},
+{
+    "original_text": "Draw 3 cards.",
+    "fmt_text": "you draw 2 cards.",
+    
+    "effects": [
+        {
+            "effect_type": "card_draw",
+
+            "who": {
+                "player_type": "controller"
+            },
+
+            "amount": {
+                "amount_type": "numeric",
+                "amount": 3
+            }
+        }
+    ]
+}]

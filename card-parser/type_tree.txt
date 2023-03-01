@@ -1,0 +1,11 @@
+JSONObject
+    MTGObject
+        Selector
+            AmountS
+                NumericAmountS
+            PlayerS
+                ControllerS
+        EffectLine
+            Effect
+        Trigger
+        ActivatedAbility

@@ -1,0 +1,24 @@
+=== types ===
+{AmountS}
+    ...
+
+(numeric)
+{NumericAmountS}
+    amount: int
+
+{PlaterS}
+    ...
+
+(controller)
+{ControllerS}
+    ...
+
+{Effect}
+    effect_lines: [EffectLine]
+
+=== patterns ===
+Trigger
+    /Whenever (*), (*)./
+    /Whenever (*), if (*), (*)./
+    /When (*), (*), (*)./
+    /When (*), if (*), (*)./

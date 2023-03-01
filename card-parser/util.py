@@ -8,6 +8,17 @@ def read_cards(path: str):
 def save_cards(path: str, cards: list[dict]):
     open(path, 'w').write(json.dumps(cards, indent=4))
 
+def filter_and_save_cards(method, save_path: str, src_path: str='../oracle_cards.json', amount: int=-1):
+    cards = read_cards(src_path)
+    result = []
+    for card in cards:
+        if method(card):
+            result += [card]
+    if amount == -1:
+        save_cards(save_path, result)
+        return
+    save_cards(save_path, result[:amount])
+
 def get_correctness_count(data: list, method) -> tuple[int, int]:
     result = 0
     exceptions = 0

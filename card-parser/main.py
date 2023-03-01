@@ -3,7 +3,6 @@ from parsers import *
 from util import *
 import re
 
-CARDNAME_TEXT = '[CARDNAME]'
 # cards = read_cards('../oracle_cards.json')
 # save_cards('test_cards.json', cards[:1000])
 
@@ -16,7 +15,7 @@ CREATURE_TYPES = open('creature_types.txt', 'r').read().split('\n')
 LAND_TYPES = open('land_types.txt', 'r').read().split('\n')
 KEYWORD_ABILITIES = open('keyword_abilities.txt', 'r').read().split('\n')
 
-cards = read_cards('test_cards.json')
+cards = read_cards('life_gain.json')
 # for card in cards:
 #     if not 'oracle_text' in card: continue
 
@@ -35,75 +34,75 @@ cards = read_cards('test_cards.json')
 #         print()
         
 
-def replace_cardname(card: dict, text: str) -> str:
-    return text.replace(card['name'].lower(), CARDNAME_TEXT)
+# def replace_cardname(card: dict, text: str) -> str:
+#     return text.replace(card['name'].lower(), CARDNAME_TEXT)
 
-def remove_flavor_words(card: dict, text: str) -> str:
-    lines = text.split('\n')
-    result = []
-    for line in lines:
-        r = line
-        for fw in FLAVOR_WORDS:
-            fwf = f'{fw} — '
-            if not line.startswith(fw): continue
-            r = line[len(fwf):]
-            break
-        result += [r]
-    return '\n'.join(result)
+# def remove_flavor_words(card: dict, text: str) -> str:
+#     lines = text.split('\n')
+#     result = []
+#     for line in lines:
+#         r = line
+#         for fw in FLAVOR_WORDS:
+#             fwf = f'{fw} — '
+#             if not line.startswith(fw): continue
+#             r = line[len(fwf):]
+#             break
+#         result += [r]
+#     return '\n'.join(result)
 
-def basic_replace(text: str, words: list[str], format: str):
-    result = text
-    for word in words:
-        r = f'\\b{word}\\b'
+# def basic_replace(text: str, words: list[str], format: str):
+#     result = text
+#     for word in words:
+#         r = f'\\b{word}\\b'
 
-        fmt = format.format(word)
-        # print('\t', r, fmt)
-        result = re.sub(r, fmt, result)
-        # result = result.replace(f'{word} ', f'{fmt} ').replace(f'{word}\n', f'{fmt}\n').replace(']s', ']')
-    return result
+#         fmt = format.format(word)
+#         # print('\t', r, fmt)
+#         result = re.sub(r, fmt, result)
+#         # result = result.replace(f'{word} ', f'{fmt} ').replace(f'{word}\n', f'{fmt}\n').replace(']s', ']')
+#     return result
 
-def remove_reminder_text(card: dict, text: str) -> str:
-    m = re.findall(REMINDER_TEXT_FINDER, text)
-    if not m: return text
+# def remove_reminder_text(card: dict, text: str) -> str:
+#     m = re.findall(REMINDER_TEXT_FINDER, text)
+#     if not m: return text
 
-    for rt in m:
-        text = text.replace(rt, '')
-    return text
+#     for rt in m:
+#         text = text.replace(rt, '')
+#     return text
 
-def replace_creature_types(card: dict, text: str) -> str:
-    return basic_replace(text, CREATURE_TYPES, '[creature_type:{}]')
+# def replace_creature_types(card: dict, text: str) -> str:
+#     return basic_replace(text, CREATURE_TYPES, '[creature_type:{}]')
 
-def replace_land_types(card: dict, text: str) -> str:
-    return basic_replace(text, LAND_TYPES, '[land_type:{}]')
+# def replace_land_types(card: dict, text: str) -> str:
+#     return basic_replace(text, LAND_TYPES, '[land_type:{}]')
 
-def format_keyword_abilities(card: dict, text: str) -> str:
-    return basic_replace(text, KEYWORD_ABILITIES, '[keyword_ability:{}]')
+# def format_keyword_abilities(card: dict, text: str) -> str:
+#     return basic_replace(text, KEYWORD_ABILITIES, '[keyword_ability:{}]')
 
-class Pipeline:
-    def __init__(self, stages: list[tuple[str, any]]) -> None:
-        self.stages = stages
+# class Pipeline:
+#     def __init__(self, stages: list[tuple[str, any]]) -> None:
+#         self.stages = stages
 
-class TextPipeline(Pipeline):
-    def __init__(self, stages: list[tuple[str, any]]) -> None:
-        super().__init__(stages)
+# class TextPipeline(Pipeline):
+#     def __init__(self, stages: list[tuple[str, any]]) -> None:
+#         super().__init__(stages)
 
-    def do(self, card: dict):
-        if not 'oracle_text' in card: return ''
-        text = card['oracle_text'].lower()
-        # print(text)
-        for pair in self.stages:
-            # print('Pipeline stage: ', pair[0])
-            text = pair[1](card, text)
-        return text
+#     def do(self, card: dict):
+#         if not 'oracle_text' in card: return ''
+#         text = card['oracle_text'].lower()
+#         # print(text)
+#         for pair in self.stages:
+#             # print('Pipeline stage: ', pair[0])
+#             text = pair[1](card, text)
+#         return text
 
-tp = TextPipeline([
-    ('card name replacement', replace_cardname),
-    ('flavor words removal', remove_flavor_words),
-    ('reminder text removal', remove_reminder_text),
-    ('creature types replacement', replace_creature_types),
-    ('land types replacement', replace_land_types),
-    ('keyword ability formatting', format_keyword_abilities)
-])
+# tp = TextPipeline([
+#     ('card name replacement', replace_cardname),
+#     ('flavor words removal', remove_flavor_words),
+#     ('reminder text removal', remove_reminder_text),
+#     ('creature types replacement', replace_creature_types),
+#     ('land types replacement', replace_land_types),
+#     ('keyword ability formatting', format_keyword_abilities)
+# ])
 
 # parsed_count = 0
 # for card in cards[:amount]:
@@ -130,12 +129,42 @@ def f(item: dict):
     
     if not result:
         print(colored(orig_text, 'green'))
+        print(colored(fmt_text, 'blue'))
         print(colored(double_text, 'red'))
         print()
     return result
 
-# print_correctness(cards[:amount], lambda item: parse_card(item) != None, 50)
-print_correctness(cards[:100], f, 50)
+# print_correctness(cards, f, 50)
+
+for card in cards[:100]:
+    text = card['oracle_text']
+    # if not 'Whenever' in text: continue
+    fmt_text = text_pipeline.get_fmt_text(text, card)
+    p = 'gain [0-9]+ life'
+    if not re.findall(p, fmt_text): continue
+    ctext = str(fmt_text)
+    for match in re.findall(p, fmt_text):
+        ctext = ctext.replace(match, colored(match, 'green'), 1)
+    print(ctext)
+
+    for line in fmt_text.split('\n'):
+        m = re.match(WHENEVER_IF_MATCHER, line)
+        if m:
+            print('\t', line)
+            print(m.groups())
+        else:
+            m = re.match(WHENEVER_MATCHER, line)
+            if m:
+                print('\t', line)
+                print(m.groups())
+
+    # print(re.sub(p, colored(p, 'green'), fmt_text))
+    print()
+
+# filter_and_save_cards(lambda card: 'oracle_text' in card and 'life' in card['oracle_text'] and 'whenever' in card['oracle_text'].lower(), 'life_gain.json')
+# filter_and_save_cards(lambda card: 'oracle_text' in card and re.findall('gain [0-9]+ life', card['oracle_text'].lower()), 'life_gain.json')
+# filter_and_save_cards(lambda card: not card['name'].startswith('A-'), '../oracle_cards.json')
+
     # text = tp.do(card)
     # if not 'oracle_text' in card: continue
     # # if not 'where x is ' in text: continue
