@@ -1,3 +1,4 @@
+import random
 from termcolor import colored
 import os.path as path
 import re
@@ -22,16 +23,67 @@ class Amogus:
 
 data = \
 Amogus('1', [
-    Amogus('2', [
+    Amogus('FAT AMOGUS2', [
+    ]),
+    Amogus('8', [
         Amogus('3'),
         Amogus('4', [
             Amogus('6'),
             Amogus('7')
         ]),
         Amogus('5'),
+    
     ]),
-    Amogus('8'),
 ])
+# data = \
+# Amogus('1', [
+#     Amogus('2', [
+#         Amogus('3'),
+#         Amogus('4', [
+#             Amogus('6'),
+#             Amogus('7')
+#         ]),
+#         Amogus('5'),
+#     ]),
+#     Amogus('8'),
+# ])
+
+class CLabel(QLabel):
+    mouse = pyqtSignal(QMouseEvent)
+
+    def __init__(self):
+        super().__init__()
+        self.setMouseTracking(True)
+
+        self.installEventFilter(self)
+
+    def mousePressEvent(self, ev: QMouseEvent) -> None:
+        self.mouse.emit(ev)
+
+    def mouseMoveEvent(self, ev: QMouseEvent) -> None:
+        self.mouse.emit(ev)
+
+    def resizeEvent(self, a0) -> None:
+        # pixmap = QPixmap()
+        # pixmap=pixmap.scaled(self.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        # self.setPixmap(pixmap)
+        # print(self.size())
+        # self.setPixmap(QPixmap(self.size()))
+        # print('mogus')
+        return super().resizeEvent(a0)
+
+    # def eventFilter(self, object, event):
+    #     if event.type() == QEvent.Enter:
+    #         print("Mouse is over the label")
+    #         print(event)
+    #         return True
+    #     if event.type() == QEvent.Leave:
+    #         print("Mouse is not over the label")
+    #         print(event)
+    #     if event.type() == QEvent.MouseMove:
+    #         print('mogus')
+        # return False
+
 
 class GraphArea(QWidget):
     def __init__(self, parent: 'GraphWidget') -> None:
@@ -40,17 +92,26 @@ class GraphArea(QWidget):
         self.parent_w = parent
         self.main = parent.main
 
+        self.last_mouse_state: QMouseEvent = None
+
+        self.w = 400
+        self.h = 600
         self.init_ui()
 
-        # self.setFixedSize(600, 400)
+        # self.setFixedSize(self.w, self.h)
 
     def init_ui(self):
         layout = QVBoxLayout()
 
-        self.label = QLabel()
-        canvas = QPixmap(400, 600)
-        canvas.fill(Qt.cyan)
-        self.label.setPixmap(canvas)
+        self.label = CLabel()
+        self.label.setScaledContents(True)
+        self.label.mouse.connect(self.mouse_action)
+        # self.label.setsi
+        # self.canvas = QPixmap()
+        self.canvas = QPixmap(self.w, self.h)
+        # self.canvas = QPixmap(self.w, self.h).scaled(self.label.width(), self.label.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.canvas.fill(Qt.cyan)
+        self.label.setPixmap(self.canvas)
         self.label.update()
         layout.addWidget(self.label)
 
@@ -60,6 +121,7 @@ class GraphArea(QWidget):
         self.setLayout(layout)
 
     def draw_smt(self):
+        between_hor = 10
         p = self.label.pixmap()
 
         layer_diff = 20
@@ -69,21 +131,28 @@ class GraphArea(QWidget):
         painter.setPen(regular)
 
         pen = QPen()
-        pen.setColor(Qt.red)
+        pen.setColor(QColor(random.randint(0, 2000)))
         # pen.setWidth(10)
-        def draw_layer(layer: list[tuple[tuple[Box, int], Amogus]], layer_offset=0):
+        def draw_layer(layer: list[tuple[tuple[TextBox, int], Amogus]], layer_offset=10):
             x = 0
+            
             next_layer = []
+            # TODO bad
+            for _, item in layer:
+                b = TextBox(self, label=item.name)
+                x += b.width() + between_hor
+            x -= between_hor
+            x = (self.w - x) // 2
             for parent_t, item in layer:
-                b = Box(p, (100, 20), label=item.name)
+                b = TextBox(self, label=item.name)
                 b.draw(painter, x, layer_offset)
                 if parent_t:
                     parent = parent_t[0]
 
-                    x_start = x + b.width // 2
+                    x_start = x + b.width() // 2
                     y_start = layer_offset
 
-                    x_end = parent_t[1] + parent.width // 2
+                    x_end = parent_t[1] + parent.width() // 2
                     y_end = layer_offset - layer_diff
 
                     painter.setPen(pen)
@@ -92,17 +161,44 @@ class GraphArea(QWidget):
                     painter.drawPoint(x_end, y_end)
                     painter.setPen(regular)
                 for child in item.children: next_layer += [((b, x), child)]
-                x += b.width + 10
+                x += b.width() + between_hor
                 # next_layer += (b, item.children)
             if not next_layer: return
-            layer_offset += layer_diff + b.height
+            layer_offset += layer_diff + b.height()
             draw_layer(next_layer, layer_offset)
         draw_layer([(None, data)])
+        # painter.drawRect(0, 0, self.)
         painter.end()
 
         # painter = QPainter(self.label.pixmap())
         # painter.drawLine(10, 10, 20, 30)
         # painter.end()
+
+    def mouse_action(self, ev: QMouseEvent):
+        self.last_mouse_state = ev
+        # self.canvas.fill(Qt.white)
+        painter = QPainter(self.label.pixmap())
+        
+        pen = QPen()
+        pen.setColor(Qt.magenta)
+        pen.setWidth(4)
+        painter.setPen(pen)
+        # pos = ev.localPos() - self.label.pos()
+        pos = ev.localPos()
+        # pos_diff = QPoint(self.label.geometry().getCoords()[0], self.label.geometry().getCoords()[1]) 
+        pos_diff = QPoint(0, 0)
+        # print(pos)
+        # print(pos_diff)
+        pos += pos_diff
+        # print(pos)
+        x = int(pos.x())
+        y = int(pos.y())
+        painter.drawPoint(x, y)
+        painter.end()
+
+        self.draw_smt()
+        self.update()
+
 
 class SelectorWidget(QWidget):
     def __init__(self, parent: 'GraphWidget') -> None:
@@ -185,6 +281,7 @@ class SelectorWidget(QWidget):
     def known_clicked(self):
         self.known_selectors_combo_box.setEnabled(self.known_radio_box.isChecked())
         # TODO
+
 
 class GraphWidget(QWidget):
     def __init__(self, parent: MainWindow) -> None:
