@@ -23,7 +23,7 @@ class Amogus:
 
 data = \
 Amogus('1', [
-    Amogus('FAT AMOGUS2', [
+    Amogus('amogus', [
     ]),
     Amogus('8', [
         Amogus('3'),
@@ -32,7 +32,6 @@ Amogus('1', [
             Amogus('7')
         ]),
         Amogus('5'),
-    
     ]),
 ])
 # data = \
@@ -48,8 +47,13 @@ Amogus('1', [
 #     Amogus('8'),
 # ])
 
+class ModMouseEvent:
+    def __init__(self, e: QMouseEvent, clicked: bool) -> None:
+        self.e = e
+        self.clicked = clicked
+
 class CLabel(QLabel):
-    mouse = pyqtSignal(QMouseEvent)
+    mouse = pyqtSignal(ModMouseEvent)
 
     def __init__(self):
         super().__init__()
@@ -58,15 +62,19 @@ class CLabel(QLabel):
         self.installEventFilter(self)
 
     def mousePressEvent(self, ev: QMouseEvent) -> None:
-        self.mouse.emit(ev)
+        self.mouse.emit(ModMouseEvent(ev, True))
+
+    def mouseReleaseEvent(self, ev: QMouseEvent) -> None:
+        self.mouse.emit(ModMouseEvent(ev, False))
 
     def mouseMoveEvent(self, ev: QMouseEvent) -> None:
-        self.mouse.emit(ev)
+        self.mouse.emit(ModMouseEvent(ev, False))
 
     def resizeEvent(self, a0) -> None:
-        # pixmap = QPixmap()
-        # pixmap=pixmap.scaled(self.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        # pixmap = self.pixmap()
+        # pixmap=pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
         # self.setPixmap(pixmap)
+        # print(pixmap.size())
         # print(self.size())
         # self.setPixmap(QPixmap(self.size()))
         # print('mogus')
@@ -104,7 +112,10 @@ class GraphArea(QWidget):
         layout = QVBoxLayout()
 
         self.label = CLabel()
-        self.label.setScaledContents(True)
+        # self.label.setScaledContents(True)
+        # self.label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        # self.label.resizeEvent.connect(lambda: self.label.setPixmap(self.label.pixmap().scaled(self.label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)))
+
         self.label.mouse.connect(self.mouse_action)
         # self.label.setsi
         # self.canvas = QPixmap()
@@ -123,6 +134,7 @@ class GraphArea(QWidget):
     def draw_smt(self):
         between_hor = 10
         p = self.label.pixmap()
+        p.fill(Qt.white)
 
         layer_diff = 20
         painter = QPainter(p)
@@ -139,12 +151,14 @@ class GraphArea(QWidget):
             next_layer = []
             # TODO bad
             for _, item in layer:
-                b = TextBox(self, label=item.name)
+                # b = TextBox(self, label=item.name)
+                b = ProgressTextBox(self, label=item.name, value=random.randint(0, 100), filled_color='red')
                 x += b.width() + between_hor
             x -= between_hor
             x = (self.w - x) // 2
             for parent_t, item in layer:
-                b = TextBox(self, label=item.name)
+                # b = TextBox(self, label=item.name)
+                b = ProgressTextBox(self, label=item.name, value=random.randint(0, 100), filled_color='red')
                 b.draw(painter, x, layer_offset)
                 if parent_t:
                     parent = parent_t[0]
@@ -176,25 +190,25 @@ class GraphArea(QWidget):
 
     def mouse_action(self, ev: QMouseEvent):
         self.last_mouse_state = ev
-        # self.canvas.fill(Qt.white)
-        painter = QPainter(self.label.pixmap())
+        self.canvas.fill(Qt.white)
+        # painter = QPainter(self.label.pixmap())
         
-        pen = QPen()
-        pen.setColor(Qt.magenta)
-        pen.setWidth(4)
-        painter.setPen(pen)
+        # pen = QPen()
+        # pen.setColor(Qt.magenta)
+        # pen.setWidth(4)
+        # painter.setPen(pen)
         # pos = ev.localPos() - self.label.pos()
-        pos = ev.localPos()
+        # pos = ev.localPos()
         # pos_diff = QPoint(self.label.geometry().getCoords()[0], self.label.geometry().getCoords()[1]) 
-        pos_diff = QPoint(0, 0)
+        # pos_diff = QPoint(0, 0)
         # print(pos)
         # print(pos_diff)
-        pos += pos_diff
+        # pos += pos_diff
         # print(pos)
-        x = int(pos.x())
-        y = int(pos.y())
-        painter.drawPoint(x, y)
-        painter.end()
+        # x = int(pos.x())
+        # y = int(pos.y())
+        # painter.drawPoint(x, y)
+        # painter.end()
 
         self.draw_smt()
         self.update()

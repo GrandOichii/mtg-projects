@@ -10,16 +10,13 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
 from graph import *
+from uutil import *
 # internal movement in list:
 # <list_name>.setDragDropMode(<list_name>.InternalMove)
 
 
 DEFAULT_TEXT_TRANSFORMER_NAME = 'Text Transfomer'
 
-
-def add_to_qlist(list: QListWidget, item: QListWidgetItem, widget: QWidget):
-    list.addItem(item)
-    list.setItemWidget(item, widget)
 
 
 class JSONObject:
