@@ -16,24 +16,130 @@ from PyQt5.QtCore import *
 from main import *
 from graph_util import *
 
-class Amogus:
-    def __init__(self, name: str, children: list['Amogus']=[]) -> None:
+class Node:
+    def __init__(self, name: str, children: list['Node']=[]) -> None:
         self.name = name
         self.children = children
 
 data = \
-Amogus('1', [
-    Amogus('amogus', [
+Node('1', [
+    Node('amogus', [
     ]),
-    Amogus('8', [
-        Amogus('3'),
-        Amogus('4', [
-            Amogus('6'),
-            Amogus('7')
+    Node('8', [
+        Node('3'),
+        Node('4', [
+            Node('6'),
+            Node('7')
         ]),
-        Amogus('5'),
+        Node('5'),
     ]),
 ])
+
+class TreeNode:
+    def __init__(self, parent: 'GraphArea', node: Node) -> None:
+        # super().__init__(parent, node.name)
+        self.box = ProgressTextBox(parent, node.name, random.randint(0, 100), filled_color='red')
+
+        self.area = parent
+
+        # TODO need the original node?
+        # self.info = node
+        self.children: list[TreeNode] = []
+        for child in node.children:
+            self.children += [TreeNode(parent, child)]
+
+    def draw(self, painter: QPainter, x: int, y: int, between: tuple[int, int], parent_t: tuple['TreeNode', int]=None):
+        # draw self
+        self.box.draw(painter, x, y)
+        my_x = x
+
+        if parent_t:
+            regular = painter.pen()
+            pen = QPen()
+            # pen.setWidth(10)
+
+            # TODO change color (or set it dynamically)
+            pen.setColor(QColor('magenta'))
+
+            parent = parent_t[0]
+            b = self.box
+
+            x_start = x + b.width() // 2
+            y_start = y
+
+            x_end = parent_t[1] + parent.box.width() // 2
+            y_end = y - between[1]
+
+            painter.setPen(pen)
+            painter.drawLine(x_start, y_start, x_end, y_end)
+            # painter.drawPoint(x_start, y_start)
+            # painter.drawPoint(x_end, y_end)
+            painter.setPen(regular)
+
+        # TODO move to different method, cache the result?
+        x = 0
+        for child in self.children:
+            x += child.box.width() + between[0]
+        x -= between[0]
+        x = (self.area.w - x) // 2
+
+
+        # draw children
+        for child in self.children:
+            new_y = y + between[1] + self.box.height()
+            child.draw(painter, x, new_y, between, (self, my_x))
+
+            x += child.box.width() + between[0]
+            
+
+class Tree:
+    def __init__(self, parent: 'GraphArea', data) -> None:
+        self.root = TreeNode(parent, data)
+
+        self.area = parent
+
+    def draw(self):
+        between = 10
+        p = self.area.label.pixmap()
+        p.fill(Qt.white)
+
+        painter = QPainter(p)
+
+        regular = QPen()
+        painter.setPen(regular)
+
+        pen = QPen()
+        pen.setColor(QColor(random.randint(0, 2000)))
+
+        self.root.draw(painter, (self.area.w - self.root.box.width()) // 2, between, (between, between*2))
+        # def draw_layer(layer: list[tuple[tuple[TextBox, int], Amogus]], layer_offset=10):
+            
+        #     for parent_t, item in layer:
+        #         b.draw(painter, x, layer_offset)
+        #         if parent_t:
+        #             parent = parent_t[0]
+
+        #             x_start = x + b.width() // 2
+        #             y_start = layer_offset
+
+        #             x_end = parent_t[1] + parent.width() // 2
+        #             y_end = layer_offset - layer_diff
+
+        #             painter.setPen(pen)
+        #             painter.drawLine(x_start, y_start, x_end, y_end)
+        #             painter.drawPoint(x_start, y_start)
+        #             painter.drawPoint(x_end, y_end)
+        #             painter.setPen(regular)
+        #         for child in item.children: next_layer += [((b, x), child)]
+        #         x += b.width() + between
+        #         # next_layer += (b, item.children)
+        #     if not next_layer: return
+        #     layer_offset += layer_diff + b.height()
+        #     draw_layer(next_layer, layer_offset)
+        # draw_layer([(None, data)])
+        painter.end()
+
+
 # data = \
 # Amogus('1', [
 #     Amogus('2', [
@@ -94,7 +200,7 @@ class CLabel(QLabel):
 
 
 class GraphArea(QWidget):
-    def __init__(self, parent: 'GraphWidget') -> None:
+    def __init__(self, parent: 'GraphWidget', data) -> None:
         super().__init__()
 
         self.parent_w = parent
@@ -104,7 +210,10 @@ class GraphArea(QWidget):
 
         self.w = 400
         self.h = 600
+
+        self.init_tree(data)
         self.init_ui()
+
 
         # self.setFixedSize(self.w, self.h)
 
@@ -126,67 +235,19 @@ class GraphArea(QWidget):
         self.label.update()
         layout.addWidget(self.label)
 
-        self.draw_smt()
+        self.draw()
         # self.data_line = 
 
         self.setLayout(layout)
 
-    def draw_smt(self):
-        between_hor = 10
-        p = self.label.pixmap()
-        p.fill(Qt.white)
+    def init_tree(self, data):
+        self.tree = Tree(self, data)
 
-        layer_diff = 20
-        painter = QPainter(p)
-
-        regular = QPen()
-        painter.setPen(regular)
-
-        pen = QPen()
-        pen.setColor(QColor(random.randint(0, 2000)))
-        # pen.setWidth(10)
-        def draw_layer(layer: list[tuple[tuple[TextBox, int], Amogus]], layer_offset=10):
-            x = 0
-            
-            next_layer = []
-            # TODO bad
-            for _, item in layer:
-                # b = TextBox(self, label=item.name)
-                b = ProgressTextBox(self, label=item.name, value=random.randint(0, 100), filled_color='red')
-                x += b.width() + between_hor
-            x -= between_hor
-            x = (self.w - x) // 2
-            for parent_t, item in layer:
-                # b = TextBox(self, label=item.name)
-                b = ProgressTextBox(self, label=item.name, value=random.randint(0, 100), filled_color='red')
-                b.draw(painter, x, layer_offset)
-                if parent_t:
-                    parent = parent_t[0]
-
-                    x_start = x + b.width() // 2
-                    y_start = layer_offset
-
-                    x_end = parent_t[1] + parent.width() // 2
-                    y_end = layer_offset - layer_diff
-
-                    painter.setPen(pen)
-                    painter.drawLine(x_start, y_start, x_end, y_end)
-                    painter.drawPoint(x_start, y_start)
-                    painter.drawPoint(x_end, y_end)
-                    painter.setPen(regular)
-                for child in item.children: next_layer += [((b, x), child)]
-                x += b.width() + between_hor
-                # next_layer += (b, item.children)
-            if not next_layer: return
-            layer_offset += layer_diff + b.height()
-            draw_layer(next_layer, layer_offset)
-        draw_layer([(None, data)])
-        # painter.drawRect(0, 0, self.)
-        painter.end()
-
-        # painter = QPainter(self.label.pixmap())
-        # painter.drawLine(10, 10, 20, 30)
-        # painter.end()
+    def draw(self):
+        self.tree.draw()
+        return
+        
+        
 
     def mouse_action(self, ev: QMouseEvent):
         self.last_mouse_state = ev
@@ -210,7 +271,7 @@ class GraphArea(QWidget):
         # painter.drawPoint(x, y)
         # painter.end()
 
-        self.draw_smt()
+        self.draw()
         self.update()
 
 
@@ -308,7 +369,7 @@ class GraphWidget(QWidget):
     def init_ui(self):
         layout = QHBoxLayout()
 
-        self.graph_area = GraphArea(self)
+        self.graph_area = GraphArea(self, data)
         self.selector_editor_area = SelectorWidget(self)
 
         layout.addWidget(self.graph_area, 2)
