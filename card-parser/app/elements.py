@@ -1,3 +1,5 @@
+from core import *
+from single_matcher import *
 import json
 
 from PyQt5.QtWidgets import *
@@ -6,6 +8,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
 from uutil import *
+
 
 class _CardLI(QListWidgetItem):
     def __init__(self, card: dict):
@@ -18,6 +21,7 @@ class _CardLI(QListWidgetItem):
         self.card = card
         self.wid.setText(card['name'])
 
+
 class CardListWithTextBox(QWidget):
     def __init__(self, parent, mid_text: str='Original', cards: list[dict]=None) -> None:
         super().__init__(parent)    
@@ -25,7 +29,6 @@ class CardListWithTextBox(QWidget):
             cards = json.loads(open('../test_cards.json', 'r', encoding='utf-8').read())
 
         self.selected_card = pyqtSignal(dict)
-
         # self.cards = cards
 
         self._parent = parent
@@ -64,4 +67,80 @@ class CardListWithTextBox(QWidget):
 
         self._text_box.setText(card['oracle_text'] if 'oracle_text' in card else '')
 
-test_element(CardListWithTextBox)
+
+class SelectorTemplateEditArea(QWidget):
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
+
+        self._parent = parent
+        
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        # TODO
+
+        self.setLayout(layout)
+        
+
+# TODO not tested
+class SingleMatcherEditArea(QWidget):
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
+
+        self._parent = parent
+        self._single_matcher: SingleMatcherNode = None
+
+        self.init_ui()
+        self.implemented_radio_box_action()
+
+
+        # self.setEnabled(False)
+
+    def init_ui(self):
+        layout = QFormLayout()
+
+        self.implemented_radio_button = QRadioButton()
+        self.implemented_radio_button.clicked.connect(self.implemented_radio_box_action)
+
+        self.template_combo_box = QComboBox()
+        self.template_combo_box.addItems(list(IMPLEMENTED_SINGLE_MATCHERS.keys()))
+
+        self.placeholder_name_edit = QLineEdit()
+
+        self.mid_label = QStackedWidget()
+        self.mid_other = QStackedWidget()
+        self.variations = {
+            # TODO too big for some reason
+            True: (QLabel('Template:'), self.template_combo_box),
+            False: (QLabel('Placeholder name: '), self.placeholder_name_edit)
+        }
+
+        for pair in self.variations.values():
+            self.mid_label.addWidget(pair[0])
+            self.mid_other.addWidget(pair[1])
+
+        layout.addRow('Implemented:', self.implemented_radio_button)
+        layout.addRow(self.mid_label, self.mid_other)
+
+        self.setLayout(layout)
+
+    def set_single_matcher(self, matcher: SingleMatcherNode):
+        self._single_matcher = matcher
+
+        self.implemented_radio_button.setChecked(matcher.implemented)
+        self.template_combo_box.setCurrentText(matcher.template_name)
+        self.placeholder_name_edit.setText(matcher.template_name)
+
+    # actions
+    def implemented_radio_box_action(self):
+        checked = self.implemented_radio_button.isChecked()
+        pair = self.variations[checked]
+        self.mid_label.setCurrentWidget(pair[0])
+        self.mid_other.setCurrentWidget(pair[1])
+
+        if not self._single_matcher: return
+        self._single_matcher.implemented = checked
+
+test_element(SingleMatcherEditArea)
