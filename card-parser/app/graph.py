@@ -1,3 +1,4 @@
+import math
 import random
 from termcolor import colored
 import os.path as path
@@ -62,7 +63,7 @@ Node('1', [
     ]),
 ])
 # data = random_node()
-
+# data = Node('root')
 # data = Node('root', [])
 
 # TODO !!! NODES ARE LAYERED ON TOP OF EACH OTHER !!!
@@ -73,28 +74,38 @@ class TreeNode:
 
         self.parent: TreeNode = parent
 
-        def press(ev: QMouseEvent):
+        def in_mouse(ev) -> bool:
             mpos = ev.pos()
             mx, my = mpos.x(), mpos.y()
             w, h = self.box.width(), self.box.height()
             # print(mx, my)
-            if not (self.x < mx < self.x + w and self.y < my < self.y + h): return
+            return self.x < mx < self.x + w and self.y < my < self.y + h
+            
+        def press(ev: QMouseEvent):
+            if ev.button() != Qt.MouseButton.LeftButton: return
+            # if ev.
+            if not in_mouse(ev): return
             self.box.selected = True
             self.area.draw()
-            # print('mg')
+
+        def double_press(ev: QMouseEvent):
+            if not in_mouse(ev): return
+            n = Node(random_node_name())
+            nd = TreeNode(self.area, n, self)
+            nd.x = self.x
+            nd.y = self.y + self.box.height() + Tree.BETWEEN_Y
+            self.children += [nd]
 
         def release(ev: QMouseEvent):
             # mpos = ev.pos()
-            if self.box.selected: 
-                print('no')
-                self.box.selected = False
+            if self.box.selected: self.box.selected = False
             self.area.draw()
             # self.area.update()
 
+        # TODO if multiple elements are on top of each other, all are moved
         def move(ev: QMouseEvent):
             if not self.box.selected: return
-
-            pos = ev.pos()
+            pos =  ev.pos()
             diff_x = pos.x() - self.x
             diff_y = pos.y() - self.y
 
@@ -105,11 +116,10 @@ class TreeNode:
                     move(child)
             move(self)
 
-            # self.x = pos.x()
-            # self.y = pos.y()
             self.area.draw()
 
         area.press.connect(press)
+        area.double_press.connect(double_press)
         area.release.connect(release)
         area.move.connect(move)
 
@@ -311,6 +321,39 @@ class Tree:
         self.area = parent
         self.root.set_initial_loc(200, 10, (Tree.BETWEEN_X, Tree.BETWEEN_Y))
 
+        self.move: bool = False
+        self.last: QPoint = None
+
+        def enable_move(ev: QMouseEvent):
+            if ev.button() != Qt.MouseButton.RightButton: return
+            self.move = True
+            self.last = ev.pos()
+
+        def disable_move(ev: QMouseEvent):
+            if ev.button() != Qt.MouseButton.RightButton: return
+            self.move = False
+
+        def move(ev: QMouseEvent):
+            pos = ev.pos()
+            if not self.last:
+                self.last = pos
+            diff = pos - self.last
+            diff_x, diff_y = diff.x(), diff.y()
+            self.last = pos
+
+            if not self.move: return
+            def do(node: TreeNode):
+                node.x += diff_x
+                node.y += diff_y
+                for child in node.children:
+                    do(child)
+            do(self.root)
+            self.area.draw()
+
+        self.area.press.connect(enable_move)
+        self.area.release.connect(disable_move)
+        self.area.move.connect(move)
+
     def update_state(self):
         self.root.update_state()
         # print(random.randint(0, 10))
@@ -446,6 +489,7 @@ class CLabel(QLabel):
 
 class GraphArea(QWidget):
     press = pyqtSignal(QMouseEvent)
+    double_press = pyqtSignal(QMouseEvent)
     release = pyqtSignal(QMouseEvent)
     move = pyqtSignal(QMouseEvent)
 
@@ -533,6 +577,10 @@ class GraphArea(QWidget):
 
         self.press.emit(ev)
 
+    def mouseDoubleClickEvent(self, ev: QMouseEvent) -> None:
+        self.double_press.emit(ev)
+        # return super().mouseDoubleClickEvent(a0)
+
     def mouseReleaseEvent(self, ev: QMouseEvent) -> None:
         # self.mouse.emit(ModMouseEvent(ev, False))
 
@@ -540,9 +588,45 @@ class GraphArea(QWidget):
 
     def mouseMoveEvent(self, ev: QMouseEvent) -> None:
         # self.mouse.emit(ModMouseEvent(ev, False))
-
         self.move.emit(ev)
 
+    def wheelEvent(self, ev: QWheelEvent) -> None:
+        dir = ev.angleDelta().y()
+
+        v = 1
+        if dir < 0: v = -v
+
+        # TextBox.VER_PADDING += v * TextBox.HOR_PADDING // TextBox.VER_PADDING
+        TextBox.HOR_PADDING += v
+        TextBox.VER_PADDING += v
+        pos = ev.pos()
+        mx, my = pos.x(), pos.y()
+
+        def sqrt(v):
+            d = math.sqrt(abs(v))
+            if v < 0:
+                d = -d
+            return int(d)
+        
+
+        def do(node: TreeNode, diff: int):
+            # diff *= 2
+            diff_x = mx - node.x
+            diff_y = my - node.y
+            if dir < 0:
+                diff_x = -diff_x
+                diff_y = -diff_y
+            # node.x -= diff_x
+            node.x -= sqrt(diff_x)
+            # node.y -= diff_y
+            node.y -= sqrt(diff_y)
+            # node.x -= diff
+            # node.y -= diff
+            for child in node.children:
+                do(child, diff)
+        do(self.tree.root, v)
+        self.draw()
+        # return super().wheelEvent(ev)
 
 class SelectorWidget(QWidget):
     def __init__(self, parent: 'GraphWidget') -> None:
