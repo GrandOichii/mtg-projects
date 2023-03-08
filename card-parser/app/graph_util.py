@@ -26,13 +26,13 @@ class TextBox:
         #     w, h = self.width(), self.height()
         #     h = self.height()
         #     if not (self.x < mx < self.x + w and self.y < my < self.y + h): return
-        #     self.selected = True
+        #     self.is_moving = True
 
         # def release(ev: QMouseEvent):
         #     # mpos = ev.pos()
-        #     if self.selected: self.selected = False
+        #     if self.is_moving: self.is_moving = False
 
-        self.selected: bool = False
+        self.is_moving: bool = False
         # parent.press.connect(press)
         # parent.release.connect(release)
         
@@ -77,7 +77,7 @@ class TextBox:
         # # print(x)
         # inside = x < mx < x + w and y < my < y + h
         # c = Qt.red if inside else TextBox.fill_color
-        c = Qt.red if self.selected else TextBox.fill_color
+        c = Qt.red if self.is_moving else TextBox.fill_color
         painter.fillRect(x, y, w, h, c)
         # # outline
         # if m is not None and inside and m.clicked:

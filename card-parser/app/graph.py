@@ -69,9 +69,10 @@ Node('1', [
 # TODO !!! NODES ARE LAYERED ON TOP OF EACH OTHER !!!
 
 class TreeNode:
-    def __init__(self, area: 'GraphArea', node: Node, parent: 'TreeNode'=None) -> None:
+    def __init__(self, area: 'GraphArea', tree: 'Tree', node: Node, parent: 'TreeNode'=None) -> None:
         self.box = ProgressTextBox(area, node.name, random.randint(0, 100), filled_color='red')
 
+        self.tree: Tree = tree
         self.parent: TreeNode = parent
 
         def in_mouse(ev) -> bool:
@@ -83,28 +84,41 @@ class TreeNode:
             
         def press(ev: QMouseEvent):
             if ev.button() != Qt.MouseButton.LeftButton: return
-            # if ev.
+
             if not in_mouse(ev): return
-            self.box.selected = True
+
+            if ev.modifiers() == Qt.ControlModifier:
+                if not self.parent: return
+                self.parent.children.remove(self)
+                self.parent = None
+
+                self.tree.roots += [self]
+                return
+            
+            if ev.modifiers() == Qt.AltModifier:
+                print('gogoo gagaa')
+                return
+            
+            self.box.is_moving = True
             self.area.draw()
 
         def double_press(ev: QMouseEvent):
             if not in_mouse(ev): return
             n = Node(random_node_name())
-            nd = TreeNode(self.area, n, self)
+            nd = TreeNode(self.area, self.tree, n, self)
             nd.x = self.x
             nd.y = self.y + self.box.height() + Tree.BETWEEN_Y
             self.children += [nd]
 
         def release(ev: QMouseEvent):
             # mpos = ev.pos()
-            if self.box.selected: self.box.selected = False
+            if self.box.is_moving: self.box.is_moving = False
             self.area.draw()
             # self.area.update()
 
         # TODO if multiple elements are on top of each other, all are moved
         def move(ev: QMouseEvent):
-            if not self.box.selected: return
+            if not self.box.is_moving: return
             pos =  ev.pos()
             diff_x = pos.x() - self.x
             diff_y = pos.y() - self.y
@@ -149,7 +163,7 @@ class TreeNode:
         # self.info = node
         self.children: list[TreeNode] = []
         for child in node.children:
-            self.children += [TreeNode(area, child, self)]
+            self.children += [TreeNode(area, tree, child, self)]
 
     def update_state(self):
         # do something
@@ -316,10 +330,10 @@ class Tree:
     BETWEEN_Y = 20
 
     def __init__(self, parent: 'GraphArea', data) -> None:
-        self.root = TreeNode(parent, data)
+        self.roots = [TreeNode(parent, self, data)]
 
         self.area = parent
-        self.root.set_initial_loc(200, 10, (Tree.BETWEEN_X, Tree.BETWEEN_Y))
+        self.roots[0].set_initial_loc(200, 10, (Tree.BETWEEN_X, Tree.BETWEEN_Y))
 
         self.move: bool = False
         self.last: QPoint = None
@@ -347,15 +361,17 @@ class Tree:
                 node.y += diff_y
                 for child in node.children:
                     do(child)
-            do(self.root)
+            for n in self.roots:
+                do(n)
+            # do(self.root)
             self.area.draw()
 
         self.area.press.connect(enable_move)
         self.area.release.connect(disable_move)
         self.area.move.connect(move)
 
-    def update_state(self):
-        self.root.update_state()
+    # def update_state(self):
+    #     self.root.update_state()
         # print(random.randint(0, 10))
 
     def draw(self, x: int, y: int):
@@ -371,18 +387,18 @@ class Tree:
         pen.setColor(QColor(random.randint(0, 2000)))
         
         # widths
-        widths = {}
-        def get_width(node: TreeNode, widths: dict) -> int:
-            result = 0
-            for child in node.children:
-                result += get_width(child, widths) + Tree.BETWEEN_X
-            result -= Tree.BETWEEN_X
-            if not node.children:
-                result = node.box.width()
-            widths[node] = result
-            return result
+        # widths = {}
+        # def get_width(node: TreeNode, widths: dict) -> int:
+        #     result = 0
+        #     for child in node.children:
+        #         result += get_width(child, widths) + Tree.BETWEEN_X
+        #     result -= Tree.BETWEEN_X
+        #     if not node.children:
+        #         result = node.box.width()
+        #     widths[node] = result
+        #     return result
         
-        get_width(self.root, widths)
+        # get_width(self.root, widths)
 
         # x_locs = {}
         # def cals_xloc_for_children(node: TreeNode, x_locs: dict, parent: TreeNode=None):
@@ -410,13 +426,15 @@ class Tree:
         #     if layer_c[i] == 0: continue
         #     layers[i] = (self.area.w - layers[i] + Tree.BETWEEN_X) // 2
 
-        layers += [(self.area.w - widths[self.root]) // 2]
+        # layers += [(self.area.w - widths[self.root]) // 2]
 
         # draw nodes
         # self.root.draw(painter, (self.area.w - self.root.children_width()) // 2, Tree.BETWEEN_Y, (Tree.BETWEEN_X, Tree.BETWEEN_Y), None, layers)
-        x = 200
+        # x = 200
         # self.root.draw(painter, x, y, (Tree.BETWEEN_X, Tree.BETWEEN_Y), None, layers)
-        self.root.draw(painter)
+        for n in self.roots:
+            n.draw(painter)
+        # self.root.draw(painter)
 
         painter.end()
 
@@ -567,7 +585,7 @@ class GraphArea(QWidget):
         # painter.end()
 
         # TODO implement
-        self.tree.update_state()
+        # self.tree.update_state()
         self.draw()
         self.update()
     
@@ -591,14 +609,18 @@ class GraphArea(QWidget):
         self.move.emit(ev)
 
     def wheelEvent(self, ev: QWheelEvent) -> None:
-        dir = ev.angleDelta().y()
+        return
+        direction = ev.angleDelta().y()
 
         v = 1
-        if dir < 0: v = -v
+        if direction < 0: v = -v
 
         # TextBox.VER_PADDING += v * TextBox.HOR_PADDING // TextBox.VER_PADDING
-        TextBox.HOR_PADDING += v
-        TextBox.VER_PADDING += v
+        wheel = 1 if direction < 0 else -1
+
+        zoom = math.exp(wheel)
+        TextBox.HOR_PADDING *= wheel
+        TextBox.VER_PADDING *= wheel
         pos = ev.pos()
         mx, my = pos.x(), pos.y()
 
@@ -608,25 +630,45 @@ class GraphArea(QWidget):
                 d = -d
             return int(d)
         
-
+        scale = 2
         def do(node: TreeNode, diff: int):
+            
+            # context.translate(originx, originy)
+        
+            # node.x += int(mx/(zoom*scale) - mx)
+            # node.y += int(my/(zoom*scale) - my)
+            
+            # # context.scale(zoom, zoom)
+            # # context.translate(-originx, -originy)
+
+            # # scale *= zoom
+            # # zoom = math.exp(dir)
+            
+
+            # for child in node.children:
+            #     do(child, diff)
+
+            # return
             # diff *= 2
-            diff_x = mx - node.x
-            diff_y = my - node.y
-            if dir < 0:
+            diff_x = mx - node.x + node.box.width()
+            diff_y = my - node.y + node.box.height()
+            if direction < 0:
                 diff_x = -diff_x
                 diff_y = -diff_y
             # node.x -= diff_x
-            node.x -= sqrt(diff_x)
+            node.x -= sqrt(direction)
             # node.y -= diff_y
-            node.y -= sqrt(diff_y)
+            node.y -= sqrt(direction)
             # node.x -= diff
             # node.y -= diff
             for child in node.children:
                 do(child, diff)
-        do(self.tree.root, v)
+        for n in self.tree.roots:
+            do(n, v)
+        # do(self.tree.root, v)
         self.draw()
         # return super().wheelEvent(ev)
+
 
 class SelectorWidget(QWidget):
     def __init__(self, parent: 'GraphWidget') -> None:
