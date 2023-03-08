@@ -26,11 +26,13 @@ NODE_NAME_SYMS = 'abcdefghijklmnopqrstuvwqyz'
 NODE_NAME_SYMS += NODE_NAME_SYMS.upper()
 NODE_NAME_SYMS += '0123456789'
 
+
 def random_node_name():
     result = ''
     for i in range(random.randint(2, 4)):
         result += NODE_NAME_SYMS[random.randint(0, len(NODE_NAME_SYMS)-1)]
     return result
+
 
 # TODO doesn't work
 def random_node(depth: int=3) -> Node:
@@ -45,6 +47,7 @@ def random_node(depth: int=3) -> Node:
         if c is None: continue
         children += [c]
     return Node(random_node_name(), children)
+
 
 data = \
 Node('1', [
@@ -62,11 +65,7 @@ Node('1', [
         Node('5'),
     ]),
 ])
-# data = random_node()
-# data = Node('root')
-# data = Node('root', [])
 
-# TODO !!! NODES ARE LAYERED ON TOP OF EACH OTHER !!!
 
 class TreeNode:
     def __init__(self, area: 'GraphArea', tree: 'Tree', node: Node, parent: 'TreeNode'=None) -> None:
@@ -74,18 +73,19 @@ class TreeNode:
 
         self.tree: Tree = tree
         self.parent: TreeNode = parent
+        self.mouse_pos: QPoint = None
 
-        def in_mouse(ev) -> bool:
+        def in_mouse(node: TreeNode, ev) -> bool:
             mpos = ev.pos()
             mx, my = mpos.x(), mpos.y()
-            w, h = self.box.width(), self.box.height()
+            w, h = node.box.width(), node.box.height()
             # print(mx, my)
-            return self.x < mx < self.x + w and self.y < my < self.y + h
+            return node.x < mx < node.x + w and node.y < my < node.y + h
             
         def press(ev: QMouseEvent):
             if ev.button() != Qt.MouseButton.LeftButton: return
 
-            if not in_mouse(ev): return
+            if not in_mouse(self, ev): return
 
             if ev.modifiers() == Qt.ControlModifier:
                 if not self.parent: return
@@ -96,14 +96,17 @@ class TreeNode:
                 return
             
             if ev.modifiers() == Qt.AltModifier:
-                print('gogoo gagaa')
+                self.mouse_pos = ev.pos()
+                # self.draw_mouse_connection = True
+                # self.area.connect_node = self
+                # print('gogoo gagaa')
                 return
             
             self.box.is_moving = True
             self.area.draw()
 
         def double_press(ev: QMouseEvent):
-            if not in_mouse(ev): return
+            if not in_mouse(self, ev): return
             n = Node(random_node_name())
             nd = TreeNode(self.area, self.tree, n, self)
             nd.x = self.x
@@ -113,11 +116,29 @@ class TreeNode:
         def release(ev: QMouseEvent):
             # mpos = ev.pos()
             if self.box.is_moving: self.box.is_moving = False
+            if self.mouse_pos:
+                parents = []
+                n = self
+                while n:
+                    parents += [n]
+                    n = n.parent
+                for n in self.tree.roots:
+                    if not in_mouse(n, ev): continue
+                    if n in parents: break
+                    n.parent = self
+                    self.children += [n]
+                    break
+
+                self.mouse_pos = None
             self.area.draw()
             # self.area.update()
 
         # TODO if multiple elements are on top of each other, all are moved
         def move(ev: QMouseEvent):
+            if self.mouse_pos:
+                self.mouse_pos = ev.pos()
+                self.area.draw()
+                return
             if not self.box.is_moving: return
             pos =  ev.pos()
             diff_x = pos.x() - self.x
@@ -140,23 +161,6 @@ class TreeNode:
         self.x: int = None
         self.y: int = None
         
-        # TODO the layout is drawn, new child in incorrect location, then is drawn again (when releasing the button), and the child fits to the position
-        # possible solutions
-        # add last_clicked to box -- is kinda clunky
-        # add deferred actions to tree after drawing -- also kinda clunky
-        # add stop_draw fuse to new child -- will try out
-        # remake the boxes to be inferited from QWidget -- will take a long time to reformat
-
-        # def f():
-        #     n = Node(random_node_name())
-        #     # tn = TreeNode()
-        #     self.children += [TreeNode(area, n, self)]
-            # WARN drawing triggers recursion loop, don't do that
-            # self.area.draw()
-            # self.area.update()
-
-        # self.box.clicked = f
-
         self.area = area
 
         # TODO save the original node?
@@ -184,6 +188,12 @@ class TreeNode:
     def draw(self, painter: QPainter):
         # draw self
         self.box.draw(painter, self.x, self.y)
+
+        # draw mouse connection
+        if self.mouse_pos:
+            start_x = self.x + self.box.width() // 2
+            start_y = self.y + self.box.height()
+            painter.drawLine(QPoint(start_x, start_y), self.mouse_pos)
 
         # draw connection
         if self.parent:
@@ -437,20 +447,6 @@ class Tree:
         # self.root.draw(painter)
 
         painter.end()
-
-
-# data = \
-# Amogus('1', [
-#     Amogus('2', [
-#         Amogus('3'),
-#         Amogus('4', [
-#             Amogus('6'),
-#             Amogus('7')
-#         ]),
-#         Amogus('5'),
-#     ]),
-#     Amogus('8'),
-# ])
 
 
 class ModMouseEvent:

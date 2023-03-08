@@ -9,6 +9,7 @@ from graph import *
 def center_pos(x: int, y: int, width: int, height: int, inner_width: int, inner_height: int):
     return x + (width - inner_width) // 2, y + (height - inner_height) // 2
 
+
 class TextBox:
     fill_color = Qt.green
 
@@ -94,6 +95,7 @@ class TextBox:
     
     def width(self):
         return self.text_width + 2 * TextBox.HOR_PADDING
+
 
 class ProgressTextBox(TextBox):
     def __init__(self, parent: 'GraphArea', label: str=None, value: int=0, max_value: int=100, filled_color: str='green', blank_color: str='gray') -> None:
