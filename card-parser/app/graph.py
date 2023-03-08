@@ -40,7 +40,6 @@ def random_node(depth: int=3) -> Node:
         return None
     # num_c = random.randint(0, depth)
     num_c = depth
-    print(depth, num_c)
     children = []
     for _ in range(num_c):
         c = random_node(depth-1)
@@ -75,11 +74,13 @@ class TreeNode:
         self.parent: TreeNode = parent
         self.mouse_pos: QPoint = None
 
+        def get_mpos(ev: QMouseEvent):
+            return ev.pos() - self.area.label.pos()
+
         def in_mouse(node: TreeNode, ev) -> bool:
-            mpos = ev.pos()
+            mpos = get_mpos(ev)
             mx, my = mpos.x(), mpos.y()
             w, h = node.box.width(), node.box.height()
-            # print(mx, my)
             return node.x < mx < node.x + w and node.y < my < node.y + h
             
         def press(ev: QMouseEvent):
@@ -96,10 +97,9 @@ class TreeNode:
                 return
             
             if ev.modifiers() == Qt.AltModifier:
-                self.mouse_pos = ev.pos()
+                self.mouse_pos = get_mpos(ev)
                 # self.draw_mouse_connection = True
                 # self.area.connect_node = self
-                # print('gogoo gagaa')
                 return
             
             self.box.is_moving = True
@@ -136,11 +136,12 @@ class TreeNode:
         # TODO if multiple elements are on top of each other, all are moved
         def move(ev: QMouseEvent):
             if self.mouse_pos:
-                self.mouse_pos = ev.pos()
+                # self.mouse_pos = ev.pos()
+                self.mouse_pos = get_mpos(ev)
                 self.area.draw()
                 return
             if not self.box.is_moving: return
-            pos =  ev.pos()
+            pos =  get_mpos(ev)
             diff_x = pos.x() - self.x
             diff_y = pos.y() - self.y
 
@@ -339,26 +340,29 @@ class Tree:
     BETWEEN_X = 20
     BETWEEN_Y = 20
 
-    def __init__(self, parent: 'GraphArea', data) -> None:
-        self.roots = [TreeNode(parent, self, data)]
+    def __init__(self, area: 'GraphArea', data) -> None:
+        self.roots = [TreeNode(area, self, data)]
 
-        self.area = parent
+        self.area = area
         self.roots[0].set_initial_loc(200, 10, (Tree.BETWEEN_X, Tree.BETWEEN_Y))
 
         self.move: bool = False
         self.last: QPoint = None
 
+        def get_mpos(ev: QMouseEvent):
+            return ev.pos() - self.area.label.pos()
+
         def enable_move(ev: QMouseEvent):
             if ev.button() != Qt.MouseButton.RightButton: return
             self.move = True
-            self.last = ev.pos()
+            self.last = get_mpos(ev)
 
         def disable_move(ev: QMouseEvent):
             if ev.button() != Qt.MouseButton.RightButton: return
             self.move = False
 
         def move(ev: QMouseEvent):
-            pos = ev.pos()
+            pos = get_mpos(ev)
             if not self.last:
                 self.last = pos
             diff = pos - self.last
@@ -382,9 +386,8 @@ class Tree:
 
     # def update_state(self):
     #     self.root.update_state()
-        # print(random.randint(0, 10))
 
-    def draw(self, x: int, y: int):
+    def draw(self):
         p = self.area.label.pixmap()
         p.fill(Qt.cyan)
 
@@ -395,56 +398,9 @@ class Tree:
 
         pen = QPen()
         pen.setColor(QColor(random.randint(0, 2000)))
-        
-        # widths
-        # widths = {}
-        # def get_width(node: TreeNode, widths: dict) -> int:
-        #     result = 0
-        #     for child in node.children:
-        #         result += get_width(child, widths) + Tree.BETWEEN_X
-        #     result -= Tree.BETWEEN_X
-        #     if not node.children:
-        #         result = node.box.width()
-        #     widths[node] = result
-        #     return result
-        
-        # get_width(self.root, widths)
-
-        # x_locs = {}
-        # def cals_xloc_for_children(node: TreeNode, x_locs: dict, parent: TreeNode=None):
-        #     pass
-        # cals_xloc_for_children(self.root, x_locs)
-
-        # print(self.area.width())
-        # for key, value in widths.items():
-        #     print(key.box.label.text(), value)
-        # pre-construct layer offsets
-        layers = []
-        # layer_c = []
-        # def f(node: TreeNode, layer: int, layers: list[int], layer_c: list[int]):
-        #     if layer >= len(layers):
-        #         layers += [0 for i in range(layer+1)]
-        #         layer_c += [0 for i in range(layer+1)]
-        #     layers[layer] += node.box.width() + Tree.BETWEEN_X
-        #     layer_c[layer] += 1
-        #     for child in node.children:
-        #         f(child, layer+1, layers, layer_c)
-
-        # f(self.root, 0, layers, layer_c)
-
-        # for i in range(len(layers)):
-        #     if layer_c[i] == 0: continue
-        #     layers[i] = (self.area.w - layers[i] + Tree.BETWEEN_X) // 2
-
-        # layers += [(self.area.w - widths[self.root]) // 2]
-
-        # draw nodes
-        # self.root.draw(painter, (self.area.w - self.root.children_width()) // 2, Tree.BETWEEN_Y, (Tree.BETWEEN_X, Tree.BETWEEN_Y), None, layers)
-        # x = 200
-        # self.root.draw(painter, x, y, (Tree.BETWEEN_X, Tree.BETWEEN_Y), None, layers)
+                
         for n in self.roots:
             n.draw(painter)
-        # self.root.draw(painter)
 
         painter.end()
 
@@ -462,43 +418,24 @@ class CLabel(QLabel):
     release = pyqtSignal(QMouseEvent)
     move = pyqtSignal(QMouseEvent)
 
-    def __init__(self):
+    def __init__(self, parent: 'GraphArea'):
         super().__init__()
+        self._parent = parent
+
         self.setMouseTracking(True)
 
         self.installEventFilter(self)
 
-        # self.a = 100
-
-    # def mousePressEvent(self, ev: QMouseEvent) -> None:
-    #     self.mouse.emit(ModMouseEvent(ev, True))
-
-    #     self.press.emit(ev)
-
-    # def mouseReleaseEvent(self, ev: QMouseEvent) -> None:
-    #     self.mouse.emit(ModMouseEvent(ev, False))
-
-    #     self.press.emit(ev)
-
-    # def mouseMoveEvent(self, ev: QMouseEvent) -> None:
-    #     self.mouse.emit(ModMouseEvent(ev, False))
-
-    #     self.press.emit(ev)
-
-    def resizeEvent(self, a0: QResizeEvent) -> None:
+    def resizeEvent(self, ev: QResizeEvent) -> None:
         # TODO fix resizing issue
 
         # if self.a < 0: return
         # self.a -= 1
-        # pixmap = self.pixmap()
-        # pixmap=pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        # pixmap = QPixmap(self.size())
-        # self.setPixmap(pixmap)
-        # print(pixmap.size())
-        # print(self.size())
-        # self.setPixmap(QPixmap(self.size()))
-        # print('mogus')
-        return super().resizeEvent(a0)
+        pixmap = self.pixmap()
+        pixmap=pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        # # pixmap = QPixmap(self.size())
+        self.setPixmap(pixmap)
+        self._parent.draw()
 
 
 class GraphArea(QWidget):
@@ -515,11 +452,8 @@ class GraphArea(QWidget):
 
         self.last_mouse_state: QMouseEvent = None
 
-        self.w = 800
-        self.h = 600
-
-        self.tree_x = 0
-        self.tree_y = 0
+        # self.w = 800
+        # self.h = 600
 
         self.init_tree(data)
         self.init_ui()
@@ -531,31 +465,28 @@ class GraphArea(QWidget):
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignTop)
 
-        self.label = CLabel()
-        self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # self.label.setScaledContents(True)
-        # self.label.setresi
+        self.label = CLabel(self)
+        # self.label.setStyleSheet("border: 1px solid black;")
+        # self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.label.setScaledContents(True)
         
         self.label.mouse.connect(self.mouse_action)
-        # self.label.setsi
-        # self.canvas = QPixmap()
-        self.canvas = QPixmap(self.w, self.h)
-        # self.canvas = QPixmap(self.w, self.h).scaled(self.label.width(), self.label.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.canvas.fill(Qt.cyan)
-        self.label.setPixmap(self.canvas)
-        self.label.update()
         layout.addWidget(self.label)
 
-        self.draw()
-        # self.data_line = 
-
         self.setLayout(layout)
+
+
+        self.canvas = QPixmap(self.label.size())
+        self.canvas.fill(Qt.cyan)
+        self.label.setPixmap(self.canvas)
+        self.draw()
+        self.label.update()
 
     def init_tree(self, data):
         self.tree = Tree(self, data)
 
     def draw(self):
-        self.tree.draw(self.tree_x, self.tree_y)
+        self.tree.draw()
         self.update()
         
     def mouse_action(self, ev: QMouseEvent):
@@ -571,10 +502,6 @@ class GraphArea(QWidget):
         # pos = ev.localPos()
         # pos_diff = QPoint(self.label.geometry().getCoords()[0], self.label.geometry().getCoords()[1]) 
         # pos_diff = QPoint(0, 0)
-        # print(pos)
-        # print(pos_diff)
-        # pos += pos_diff
-        # print(pos)
         # x = int(pos.x())
         # y = int(pos.y())
         # painter.drawPoint(x, y)
