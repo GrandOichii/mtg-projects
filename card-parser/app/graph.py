@@ -468,7 +468,7 @@ class GraphArea(QWidget):
         self.label = CLabel(self)
         # self.label.setStyleSheet("border: 1px solid black;")
         # self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.label.setScaledContents(True)
+        # self.label.setScaledContents(True)
         
         self.label.mouse.connect(self.mouse_action)
         layout.addWidget(self.label)
