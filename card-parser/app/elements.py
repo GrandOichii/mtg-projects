@@ -10,6 +10,15 @@ from PyQt5.QtCore import *
 from uutil import *
 
 
+class CardNameLine(QLineEdit):
+    def __init__(self, card_names: list[str]):
+        super().__init__()
+
+        self.setPlaceholderText('Enter card name')
+        card_name_completer = QCompleter(card_names)
+        self.setCompleter(card_name_completer)
+
+
 class _CardLI(QListWidgetItem):
     def __init__(self, card: dict):
         super().__init__()
@@ -82,7 +91,6 @@ class SelectorTemplateEditArea(QWidget):
         # TODO
 
         self.setLayout(layout)
-        
 
 # TODO not tested
 class SingleMatcherEditArea(QWidget):
@@ -143,4 +151,4 @@ class SingleMatcherEditArea(QWidget):
         if not self._single_matcher: return
         self._single_matcher.implemented = checked
 
-test_element(SingleMatcherEditArea)
+# test_element(SingleMatcherEditArea)

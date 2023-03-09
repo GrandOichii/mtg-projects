@@ -11,6 +11,7 @@ from PyQt5.QtCore import *
 
 from graph import *
 from uutil import *
+from elements import *
 # internal movement in list:
 # <list_name>.setDragDropMode(<list_name>.InternalMove)
 
@@ -418,12 +419,13 @@ class MainWindow(QMainWindow):
         frame.setLayout(frame_layout)
 
 
-        self.text_transformer_card_search_edit = QLineEdit()
-        self.text_transformer_card_search_edit.setPlaceholderText('Enter card name')
-        # TODO move to thread of card loading
-        card_name_completer = QCompleter(list(self.name_dict.keys()))
+        # self.text_transformer_card_search_edit = QLineEdit()
+        # self.text_transformer_card_search_edit.setPlaceholderText('Enter card name')
+        # # TODO move to thread of card loading
+        # card_name_completer = QCompleter(list(self.name_dict.keys()))
+        self.text_transformer_card_search_edit = CardNameLine(list(self.name_dict.keys()))
+        # self.text_transformer_card_search_edit.setCompleter(card_name_completer)
         self.text_transformer_card_search_edit.textChanged.connect(self.text_transformer_card_search_text_changed_action)
-        self.text_transformer_card_search_edit.setCompleter(card_name_completer)
         parse_button = QPushButton('Parse')
         parse_button.clicked.connect(self.parse_card_text_action)
 
@@ -459,7 +461,8 @@ class MainWindow(QMainWindow):
     def load_cards(self):
         # TODO move to different thread
         
-        self.all_cards = json.loads(open(CARDS_PATH, 'r', encoding='utf-8').read())
+        # self.all_cards = json.loads(open(CARDS_PATH, 'r', encoding='utf-8').read())
+        self.all_cards = []
 
         # indexes
         self.name_dict = {}

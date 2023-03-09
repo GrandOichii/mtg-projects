@@ -58,8 +58,8 @@ class TextBox(MovableBox):
 
     def draw_mid_text(self, painter: QPainter, x: int, y: int, text: str):
         t = QStaticText(text)
-        # c_pos = center_pos(x, y, self.width(), self.height(), self.text_width, self.text_height)
-        painter.drawStaticText(x + TextBox.HOR_PADDING, y + TextBox.VER_PADDING, t)
+        c_pos = center_pos(x, y, self.width(), self.height(), self.text_width, self.text_height)
+        painter.drawStaticText(c_pos[0], y + TextBox.VER_PADDING, t)
 
     # override this
     def draw(self, painter: QPainter, x: int, y: int):
@@ -100,6 +100,39 @@ class TextBox(MovableBox):
         return self.text_width + 2 * TextBox.HOR_PADDING
 
 
+class ProgressWraper(Box):
+    def __init__(self, box: Box, value: int=0, max_value: int=100, filled_color: str='green', blank_color: str='gray'):
+        super().__init__()
+
+        self._box = box
+
+        self.filled_c = QColor(filled_color)
+        self.blank_c = QColor(blank_color)
+
+        self.value = value
+        self.max_value = max_value
+
+    def bar_height(self):
+        return self._box.height() // 4
+
+    def height(self):
+        return self._box.height() + self.bar_height()
+    
+    def draw(self, painter: QPainter, x: int, y: int):
+        self._box.draw(painter, x, y)
+
+        # draw progress bar
+        bh = self.bar_height()
+        sy = y + self._box.height()
+        w = self.width()
+        # draw blank
+        painter.fillRect(x, sy, w, bh, self.blank_c)
+        # draw filled
+        painter.fillRect(x, sy, w * self.value // self.max_value, bh, self.filled_c)
+        # draw border
+        painter.drawRect(x, sy, w, bh)
+
+
 class ProgressTextBox(TextBox):
     def __init__(self, parent: 'GraphArea', label: str=None, value: int=0, max_value: int=100, filled_color: str='green', blank_color: str='gray') -> None:
         super().__init__(parent, label)
@@ -121,7 +154,7 @@ class ProgressTextBox(TextBox):
 
         # draw progress bar
         bh = self.bar_height()
-        sy = y + super().height()
+        sy = y + self._box.height()
         w = self.width()
         # draw blank
         painter.fillRect(x, sy, w, bh, self.blank_c)
@@ -129,3 +162,33 @@ class ProgressTextBox(TextBox):
         painter.fillRect(x, sy, w * self.value // self.max_value, bh, self.filled_c)
         # draw border
         painter.drawRect(x, sy, w, bh)
+
+
+class MultiTextBox(TextBox):
+    def __init__(self, parent: 'GraphArea', label: str = None) -> None:
+        super().__init__(parent, label)
+
+        self.sub_boxes: list[TextBox] = []
+
+    def draw(self, painter: QPainter, x: int, y: int):
+        super().draw(painter, x, y)
+
+        y += super().height()
+        for child in self.sub_boxes:
+            child.draw(painter, x, y)
+            x += child.width()
+
+    def height(self):
+        return super().height() + self.children_height()
+
+    def children_height(self):
+        result = 0
+        for child in self.sub_boxes:
+            result = max(child.height(), result)
+        return result
+    
+    def width(self):
+        result = 0
+        for child in self.sub_boxes:
+            result += child.width()
+        return max(result, super().width())

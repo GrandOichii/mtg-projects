@@ -1,6 +1,10 @@
 import json
 
-class Matcher:
+class MTGObject:
     def __init__(self) -> None:
-        self.name: str = ''
+        pass
+
+class Matcher(MTGObject):
+    def __init__(self, name: str='') -> None:
+        self.name: str = name
 

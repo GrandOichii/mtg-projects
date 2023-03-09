@@ -2,9 +2,10 @@ from core import *
 from selector import *
 
 class MultipleMatcher(Matcher):
-    def __init__(self) -> None:
+    def __init__(self, pattern: str='', selectors: list[Selector]=None) -> None:
         super().__init__()
 
-        self.pattern: str = ''
+        self.pattern: str = pattern
         
-        self.selectors: list[Selector] = []
+        if not selectors: selectors = []
+        self.selectors: list[Selector] = selectors

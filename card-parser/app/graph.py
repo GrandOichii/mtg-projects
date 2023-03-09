@@ -15,33 +15,22 @@ from PyQt5.QtCore import *
 # import pyqtgraph as pb/
 
 from main import *
+from elements import *
 from graph_util import *
 
-class Node:
-    def __init__(self, name: str, children: list['Node']=[]) -> None:
-        self.name = name
-        self.children = children
+from multiple_matcher import *
+
+
+# class Node:
+#     def __init__(self, name: str, children: list['Node']=[]) -> None:
+#         self.name = name
+#         self.children = children
+
 
 NODE_NAME_SYMS = 'abcdefghijklmnopqrstuvwqyz'
 NODE_NAME_SYMS += NODE_NAME_SYMS.upper()
 NODE_NAME_SYMS += '0123456789'
 
-
-'''
-            n = Node(random_node_name())
-            nd = TreeNode(self.area, self.tree, n, self)
-            nd.x = self.x
-            nd.y = self.y + self.box.height() + Tree.BETWEEN_Y
-            self.children += [nd]
-
-            
-            self.children: list[TreeNode] = []
-            for child in node.children:
-                self.children += [TreeNode(area, tree, child, self)]
-
-
-
-'''
 
 def random_node_name():
     result = ''
@@ -50,47 +39,43 @@ def random_node_name():
     return result
 
 
-# TODO doesn't work
-def random_node(depth: int=3) -> Node:
-    if depth == 0:
-        return None
-    # num_c = random.randint(0, depth)
-    num_c = depth
-    children = []
-    for _ in range(num_c):
-        c = random_node(depth-1)
-        if c is None: continue
-        children += [c]
-    return Node(random_node_name(), children)
+# data = \
+# Node('1', [
+#     Node('amogus', [
+#     ]),
+#     Node('8', [
+#         Node('3', [
+#             Node('AA'),
+#             Node('NN')
+#         ]),
+#         Node('4', [
+#             Node('6'),
+#             Node('7')
+#         ]),
+#         Node('5'),
+#     ]),
+# ])
 
 
-data = \
-Node('1', [
-    Node('amogus', [
-    ]),
-    Node('8', [
-        Node('3', [
-            Node('AA'),
-            Node('NN')
-        ]),
-        Node('4', [
-            Node('6'),
-            Node('7')
-        ]),
-        Node('5'),
-    ]),
-])
+# data = Node('root')
 
 
-data = Node('root')
+data = MultipleMatcher('(.*)')
 
 
 class TreeNode:
-    def __init__(self, area: 'GraphArea', tree: 'Tree', text: str='', parent: 'TreeNode'=None) -> None:
+    def __init__(self, area: 'GraphArea', tree: 'Tree', text: str='', parent: 'TreeNode'=None, 
+                 interactable:bool = True,
+                 movable: bool=True,
+                 disconnectable: bool=True) -> None:
         # self.box = ProgressTextBox(area, text, random.randint(0, 100), filled_color='red')
         self.box: MovableBox = MovableBox()
 
         self.tree: Tree = tree
+
+        self.interactable = interactable
+        self.movable = movable
+        self.disconnectable = disconnectable
 
         self.children: list[TreeNode] = []
         self.parent: TreeNode = parent
@@ -104,6 +89,8 @@ class TreeNode:
             return ev.pos() - self.area.label.pos()
 
         def in_mouse(node: TreeNode, ev) -> bool:
+            if not node.interactable: return False
+
             mpos = get_mpos(ev)
             mx, my = mpos.x(), mpos.y()
             w, h = node.box.width(), node.box.height()
@@ -116,6 +103,7 @@ class TreeNode:
 
             if ev.modifiers() == Qt.ControlModifier:
                 if not self.parent: return
+                if not self.disconnectable: return
                 self.parent.children.remove(self)
                 self.parent = None
 
@@ -133,10 +121,14 @@ class TreeNode:
             self.area.draw()
 
         def double_press(ev: QMouseEvent):
+            if not self.interactable: return
+
             if not in_mouse(self, ev): return
             if self.on_double_click(): self.on_double_click()
 
         def release(ev: QMouseEvent):
+            if not self.interactable: return
+
             # mpos = ev.pos()
             if self.box.is_moving: self.box.is_moving = False
             if self.mouse_pos:
@@ -159,6 +151,8 @@ class TreeNode:
 
         # TODO if multiple elements are on top of each other, all are moved
         def move(ev: QMouseEvent):
+            if not self.movable: return
+
             if self.mouse_pos:
                 # self.mouse_pos = ev.pos()
                 self.mouse_pos = get_mpos(ev)
@@ -169,12 +163,7 @@ class TreeNode:
             diff_x = pos.x() - self.x - self.box.width() // 2
             diff_y = pos.y() - self.y - self.box.height() // 2
 
-            def move(node: TreeNode):
-                node.x += diff_x 
-                node.y += diff_y
-                for child in node.children:
-                    move(child)
-            move(self)
+            self.move(diff_x, diff_y)
 
             self.area.draw()
 
@@ -238,12 +227,13 @@ class TreeNode:
         for child in self.children:
             child.draw(painter)    
 
-    def set_initial_loc(self, x: int, y: int, between: tuple[int, int]) -> int:
+    def set_initial_loc(self, x: int, y: int, between: tuple[int, int], correct_self_loc: bool = True) -> int:
         cwidth = self.children_width(between[0])
         my_x = x
         # TODO fix inconsistent width when adding to amogus 
         # if cwidth > self.box.width():
-        my_x += (cwidth - self.box.width()) // 2
+        if correct_self_loc:
+            my_x += (cwidth - self.box.width()) // 2
         # x -= (cwidth-self.box.width())//2
 
         cwidth = max(self.box.width(), cwidth)
@@ -260,11 +250,18 @@ class TreeNode:
         return cwidth
         # self.box.draw(painter, my_x, y)
 
+    def move(self, xdiff: int, ydiff: int):
+        self.x += xdiff 
+        self.y += ydiff
+        for child in self.children:
+            child.move(xdiff, ydiff)
+
+BETWEEN_X = 20
+BETWEEN_Y = 20
+
 
 class Tree:
 
-    BETWEEN_X = 20
-    BETWEEN_Y = 20
 
     def __init__(self, area: 'GraphArea') -> None:
         self.roots: list[TreeNode] = []
@@ -354,25 +351,42 @@ class CLabel(QLabel):
     def resizeEvent(self, ev: QResizeEvent) -> None:
         # TODO fix resizing issue
 
-        # if self.a < 0: return
-        # self.a -= 1
         pixmap = self.pixmap()
         pixmap=pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        # # pixmap = QPixmap(self.size())
         self.setPixmap(pixmap)
         self._parent.draw()
 
 
+class MTGTree(Tree):
+    def __init__(self, area: 'GraphArea') -> None:
+        super().__init__(area)
+
+    def get_pipeline(self):
+        # TODO
+        result = None
+
+        return result
+
+
 class MTGTreeNode(TreeNode):
-    def __init__(self, area: 'GraphArea', tree: 'Tree', text: str = '', parent: 'TreeNode' = None) -> None:
-        super().__init__(area, tree, text, parent)
+    def __init__(self, area: 'GraphArea', tree: 'MTGTree', text: str = '', parent: 'TreeNode' = None, 
+                 interactable: bool=True,
+                 movable: bool=True,
+                 disconnectable: bool=True) -> None:
+        super().__init__(area, tree, text, parent, interactable, movable, disconnectable)
 
-        self.box = ProgressTextBox(area, text, random.randint(0, 100), filled_color='red')
+        self.box = TextBox(area, text)
+        # self.box = MultiTextBox(area)
+        # for i in range(random.randint(1, 4)):
+        #     self.box.sub_boxes += [TextBox(area, random_node_name())]
+        # self.box = ProgressWraper(TextBox(area, text), random.randint(0, 100), filled_color='red')
+        # self.box = ProgressTextBox(area, text, random.randint(0, 100), filled_color='red')
 
+    
         def dc():
             nd = MTGTreeNode(self.area, self.tree, random_node_name(), self)
             nd.x = self.x
-            nd.y = self.y + self.box.height() + Tree.BETWEEN_Y
+            nd.y = self.y + self.box.height() + BETWEEN_Y
             self.children += [nd]
 
         self.on_double_click = dc
@@ -380,6 +394,47 @@ class MTGTreeNode(TreeNode):
         self.on_click = lambda: self.area.parent_w.set_current_node(self)
 
 
+class MTGTreeMultNode(MTGTreeNode):
+    def __init__(self, area: 'GraphArea', tree: 'MTGTree', text: str = '', parent: 'TreeNode' = None, sub_nodes: list[MTGTreeNode] = None) -> None:
+        super().__init__(area, tree, text, parent)
+        if not sub_nodes: sub_nodes = []
+
+        self.box = MultiTextBox(area, text)
+
+        self.sub_nodes: list[MTGTreeNode] = []
+
+        for node in sub_nodes:
+            self.add_node(node)
+
+        # self.sub_nodes: list[MTGTreeNode] = sub_nodes
+
+    def add_node(self, node: MTGTreeNode):
+        self.sub_nodes += [node]
+        # node.x = 110/
+        # node.y = 110
+
+        # self.box.add_sub_box(node.box)
+        self.box.sub_boxes += [node.box]
+
+    def set_initial_loc(self, x: int, y: int, between: tuple[int, int]) -> int:
+        super().set_initial_loc(x, y, between)
+
+        y += self.box.height() - TextBox.height(self.box)
+
+        for child in self.sub_nodes:
+            child.set_initial_loc(x, y, between, False)
+            x += child.box.width()
+
+    def draw(self, painter: QPainter):
+        super().draw(painter)
+
+        for child in self.sub_nodes:
+            child.draw(painter)
+
+    def move(self, xdiff: int, ydiff: int):
+        super().move(xdiff, ydiff)
+        for child in self.sub_nodes:
+            child.move(xdiff, ydiff)
 
 class GraphArea(QWidget):
     press = pyqtSignal(QMouseEvent)
@@ -426,17 +481,29 @@ class GraphArea(QWidget):
 
     def init_tree(self, data):
         # double click action
-        self.tree = Tree(self)
+        self.tree = MTGTree(self)
 
-        def do(node: Node, parent: TreeNode=None) -> MTGTreeNode:
+        def do(node: MTGObject, parent: TreeNode=None) -> MTGTreeNode:
             n = MTGTreeNode(self, self.tree, node.name)
             for child in n.children:
                 c = do(child, n, parent)
                 n.children += [c]
             return n
         
-        root = do(data)
-        root.set_initial_loc(200, 10, (Tree.BETWEEN_X, Tree.BETWEEN_Y))
+        # root = do(data)
+        sub_nodes = []
+
+        ssnode1 = MTGTreeNode(self, self.tree, 'T1', interactable=False)
+        ssnode1.children += [MTGTreeNode(self, self.tree, 'Child of T1', ssnode1, disconnectable=False)]
+        sub_nodes += [ssnode1]
+
+        ssnode2 = MTGTreeNode(self, self.tree, 'T2', interactable=False)
+        ssnode2.children += [MTGTreeNode(self, self.tree, 'Child of T2 1', ssnode2, disconnectable=False)]
+        ssnode2.children += [MTGTreeNode(self, self.tree, 'Child of T2 2', ssnode2, disconnectable=False)]
+        sub_nodes += [ssnode2]
+
+        root = MTGTreeMultNode(self, self.tree, 'root', sub_nodes=sub_nodes)
+        root.set_initial_loc(200, 10, (BETWEEN_X, BETWEEN_Y))
         self.tree.roots += [root]
 
 
@@ -641,7 +708,9 @@ class GraphWidget(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        layout = QHBoxLayout()
+        layout = QVBoxLayout()
+
+        top_layout = QHBoxLayout()
 
         self.graph_area = GraphArea(self, data)
 
@@ -652,10 +721,28 @@ class GraphWidget(QWidget):
         self.node_name_edit.textChanged.connect(self.text_changed)
         self.right.addRow('Label:', self.node_name_edit)
 
-        layout.addWidget(self.graph_area, 2)
-        layout.addLayout(self.right, 1)
-        # layout.addWidget(self.selector_editor_area, 1)
+        top_layout.addWidget(self.graph_area, 2)
+        top_layout.addLayout(self.right, 1)
+        # top_layout.addWidget(self.selector_editor_area, 1)
 
+        card_name_line = QHBoxLayout()
+        parse_button = QPushButton('Parse')
+        parse_button.clicked.connect(self.parse_action)
+        self.card_name_edit = CardNameLine(list(self.main.name_dict.keys()))
+        self.card_name_edit.textChanged.connect(self.card_name_text_changed)
+        card_name_line.addWidget(self.card_name_edit)
+        card_name_line.addWidget(parse_button)
+
+        texts_line = QHBoxLayout()
+        self.original_text = QTextEdit()
+        self.parsed_text = QTextEdit()
+        self.parsed_text.setReadOnly(True)
+        texts_line.addWidget(self.original_text)
+        texts_line.addWidget(self.parsed_text)
+
+        layout.addLayout(top_layout)
+        layout.addLayout(card_name_line)
+        layout.addLayout(texts_line)
         self.setLayout(layout)
 
     def set_current_node(self, node: MTGTreeNode):
@@ -667,3 +754,17 @@ class GraphWidget(QWidget):
         text = self.node_name_edit.text()
         self.current_node.set_text(text)
         self.graph_area.draw()
+
+    def card_name_text_changed(self):
+        cname = self.card_name_edit.text()
+        if not cname in self.main.name_dict: return
+
+        card = self.main.name_dict[cname]
+        if not 'oracle_text' in card: return
+        self.original_text.setText(card['oracle_text'])
+
+    def parse_action(self):
+        original_text = self.original_text.toPlainText()
+        result = ''
+
+        self.parsed_text.setText(result)
