@@ -142,11 +142,11 @@ class TreeNode:
                 return
             if not self.box.is_moving: return
             pos =  get_mpos(ev)
-            diff_x = pos.x() - self.x
-            diff_y = pos.y() - self.y
+            diff_x = pos.x() - self.x - self.box.width() // 2
+            diff_y = pos.y() - self.y - self.box.height() // 2
 
             def move(node: TreeNode):
-                node.x += diff_x
+                node.x += diff_x 
                 node.y += diff_y
                 for child in node.children:
                     move(child)
@@ -458,7 +458,6 @@ class GraphArea(QWidget):
         self.init_tree(data)
         self.init_ui()
 
-
         # self.setFixedSize(self.w, self.h)
 
     def init_ui(self):
@@ -515,7 +514,6 @@ class GraphArea(QWidget):
     # events
     def mousePressEvent(self, ev: QMouseEvent) -> None:
         # self.mouse.emit(ModMouseEvent(ev, True))
-
         self.press.emit(ev)
 
     def mouseDoubleClickEvent(self, ev: QMouseEvent) -> None:
