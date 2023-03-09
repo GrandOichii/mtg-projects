@@ -21,24 +21,7 @@ class TextBox:
     def __init__(self, parent: 'GraphArea', label:str=None) -> None:
         if not label: label = ''
 
-        # def press(ev: QMouseEvent):
-        #     mpos = ev.pos()
-        #     mx, my = mpos.x(), mpos.y()
-        #     w, h = self.width(), self.height()
-        #     h = self.height()
-        #     if not (self.x < mx < self.x + w and self.y < my < self.y + h): return
-        #     self.is_moving = True
-
-        # def release(ev: QMouseEvent):
-        #     # mpos = ev.pos()
-        #     if self.is_moving: self.is_moving = False
-
         self.is_moving: bool = False
-        # parent.press.connect(press)
-        # parent.release.connect(release)
-        
-        # parent.parent_w.
-        # print(par)
 
         self.clicked = None
 

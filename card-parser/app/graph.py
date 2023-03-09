@@ -27,6 +27,22 @@ NODE_NAME_SYMS += NODE_NAME_SYMS.upper()
 NODE_NAME_SYMS += '0123456789'
 
 
+'''
+            n = Node(random_node_name())
+            nd = TreeNode(self.area, self.tree, n, self)
+            nd.x = self.x
+            nd.y = self.y + self.box.height() + Tree.BETWEEN_Y
+            self.children += [nd]
+
+            
+            self.children: list[TreeNode] = []
+            for child in node.children:
+                self.children += [TreeNode(area, tree, child, self)]
+
+
+
+'''
+
 def random_node_name():
     result = ''
     for i in range(random.randint(2, 4)):
@@ -66,13 +82,22 @@ Node('1', [
 ])
 
 
+data = Node('root')
+
+
 class TreeNode:
-    def __init__(self, area: 'GraphArea', tree: 'Tree', node: Node, parent: 'TreeNode'=None) -> None:
-        self.box = ProgressTextBox(area, node.name, random.randint(0, 100), filled_color='red')
+    def __init__(self, area: 'GraphArea', tree: 'Tree', text: str='', parent: 'TreeNode'=None) -> None:
+        self.box = ProgressTextBox(area, text, random.randint(0, 100), filled_color='red')
 
         self.tree: Tree = tree
+
+        self.children: list[TreeNode] = []
         self.parent: TreeNode = parent
+        
         self.mouse_pos: QPoint = None
+        
+        self.on_click = None
+        self.on_double_click = None
 
         def get_mpos(ev: QMouseEvent):
             return ev.pos() - self.area.label.pos()
@@ -102,16 +127,14 @@ class TreeNode:
                 # self.area.connect_node = self
                 return
             
+            if self.on_click: self.on_click()
             self.box.is_moving = True
             self.area.draw()
 
+
         def double_press(ev: QMouseEvent):
             if not in_mouse(self, ev): return
-            n = Node(random_node_name())
-            nd = TreeNode(self.area, self.tree, n, self)
-            nd.x = self.x
-            nd.y = self.y + self.box.height() + Tree.BETWEEN_Y
-            self.children += [nd]
+            if self.on_double_click(): self.on_double_click()
 
         def release(ev: QMouseEvent):
             # mpos = ev.pos()
@@ -126,6 +149,7 @@ class TreeNode:
                     if not in_mouse(n, ev): continue
                     if n in parents: break
                     n.parent = self
+                    self.tree.roots.remove(n)
                     self.children += [n]
                     break
 
@@ -164,17 +188,8 @@ class TreeNode:
         
         self.area = area
 
-        # TODO save the original node?
-        # self.info = node
-        self.children: list[TreeNode] = []
-        for child in node.children:
-            self.children += [TreeNode(area, tree, child, self)]
-
-    def update_state(self):
-        # do something
-
-        for child in self.children:
-            child.update_state()
+    def set_text(self, text: str):
+        self.box.set_text(text)
 
     def children_width(self, between_x: int=0):
         result = 0
@@ -184,7 +199,6 @@ class TreeNode:
         if not self.children:
             result = self.box.width()
         return result
-        return max(self.box.width(), result)
 
     def draw(self, painter: QPainter):
         # draw self
@@ -224,94 +238,6 @@ class TreeNode:
         for child in self.children:
             child.draw(painter)    
 
-    def draw1(self, painter: QPainter, x: int, y: int, between: tuple[int, int], parent_t: tuple['TreeNode', int]=None, layer_offsets:list[int]=None, layer:int=0)->int:
-        # if not layer_offsets:
-        #     layer_offsets = []
-        # if layer >= len(layer_offsets):
-        #     layer_offsets += [0 for i in range(layer+1)]
-
-        # cwidth = self.children_width(between[0])
-        # my_x = x
-        # # TODO fix inconsistent width when adding to amogus 
-        # # if cwidth > self.box.width():
-        # my_x += (cwidth - self.box.width()) // 2
-        # # x -= (cwidth-self.box.width())//2
-
-        # cwidth = max(self.box.width(), cwidth)
-
-        # my_x += (cwidth-self.box.width()) // 2
-        # if parent_t:
-        #     p = parent_t[0]
-
-        # my_x += (self.box.width()) // 2
-        # my_x += (cwidth) // 2
-
-        # my_x = x
-
-
-        # draw children
-        for child in self.children:
-            new_y = y + between[1] + self.box.height()
-            cx, cy = child.x, child.y
-            if not child.x:
-                cx = x
-                cy = new_y
-            w = child.draw(painter, cx, cy, between, (self, my_x), layer_offsets, layer+1) + between[0]
-            x += w
-
-        # draw self
-        self.box.draw(painter, self.x, self.y)
-        # layer_offsets[layer] += self.box.width() + between[0]
-
-        # draw connection
-        if parent_t:
-            regular = painter.pen()
-            pen = QPen()
-            # pen.setWidth(10)
-
-            # TODO change color (or set it dynamically)
-            pen.setColor(QColor('magenta'))
-
-            parent = parent_t[0]
-            b = self.box
-
-            x_start = my_x + b.width() // 2
-            y_start = y
-
-            x_end = parent_t[1] + parent.box.width() // 2
-            y_end = y - between[1]
-
-            painter.setPen(pen)
-            painter.drawLine(x_start, y_start, x_end, y_end)
-            # painter.drawPoint(x_start, y_start)
-            # painter.drawPoint(x_end, y_end)
-            painter.setPen(regular)
-
-        # TODO remove
-        # draw width line
-        pen = painter.pen()
-        tpen = QPen()
-        tpen.setColor(Qt.yellow)
-        tpen.setWidth(3)
-        painter.setPen(tpen)
-
-        lx = my_x - (cwidth - self.box.width()) // 2
-        # lx = my_x
-        ly = y + self.box.height()
-        rx = lx + cwidth
-        ry = y+self.box.height()
-
-        painter.drawLine(lx, ly, rx, ry)
-        tpen.setWidth(5)
-        tpen.setColor(Qt.blue)
-        painter.setPen(tpen)
-        painter.drawPoint(lx, ly)
-        painter.drawPoint(rx, ry)
-        painter.setPen(pen)
-
-        return cwidth
-        # return max(self.box.width(), cwidth)
-
     def set_initial_loc(self, x: int, y: int, between: tuple[int, int]) -> int:
         cwidth = self.children_width(between[0])
         my_x = x
@@ -340,11 +266,11 @@ class Tree:
     BETWEEN_X = 20
     BETWEEN_Y = 20
 
-    def __init__(self, area: 'GraphArea', data) -> None:
-        self.roots = [TreeNode(area, self, data)]
+    def __init__(self, area: 'GraphArea') -> None:
+        # self.roots = [TreeNode(area, self, data)]
+        self.roots: list[TreeNode] = []
 
         self.area = area
-        self.roots[0].set_initial_loc(200, 10, (Tree.BETWEEN_X, Tree.BETWEEN_Y))
 
         self.move: bool = False
         self.last: QPoint = None
@@ -438,6 +364,21 @@ class CLabel(QLabel):
         self._parent.draw()
 
 
+class MTGTreeNode(TreeNode):
+    def __init__(self, area: 'GraphArea', tree: 'Tree', text: str = '', parent: 'TreeNode' = None) -> None:
+        super().__init__(area, tree, text, parent)
+
+        def dc():
+            nd = TreeNode(self.area, self.tree, random_node_name(), self)
+            nd.x = self.x
+            nd.y = self.y + self.box.height() + Tree.BETWEEN_Y
+            self.children += [nd]
+
+        self.on_double_click = dc
+
+        self.on_click = lambda: print('aa')
+
+
 class GraphArea(QWidget):
     press = pyqtSignal(QMouseEvent)
     double_press = pyqtSignal(QMouseEvent)
@@ -482,7 +423,20 @@ class GraphArea(QWidget):
         self.label.update()
 
     def init_tree(self, data):
-        self.tree = Tree(self, data)
+        # double click action
+        self.tree = Tree(self)
+
+        def do(node: Node, parent: TreeNode=None) -> MTGTreeNode:
+            n = MTGTreeNode(self, self.tree, node.name)
+            for child in n.children:
+                c = do(child, n)
+                n.children += [c]
+            return n
+        
+        root = do(data)
+        root.set_initial_loc(200, 10, (Tree.BETWEEN_X, Tree.BETWEEN_Y))
+        self.tree.roots += [root]
+
 
     def draw(self):
         self.tree.draw()
@@ -686,10 +640,11 @@ class GraphWidget(QWidget):
         layout = QHBoxLayout()
 
         self.graph_area = GraphArea(self, data)
-        self.selector_editor_area = SelectorWidget(self)
+
+        # self.selector_editor_area = SelectorWidget(self)
 
         layout.addWidget(self.graph_area, 2)
-        layout.addWidget(self.selector_editor_area, 1)
+        # layout.addWidget(self.selector_editor_area, 1)
 
         self.setLayout(layout)
 
