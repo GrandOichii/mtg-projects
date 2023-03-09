@@ -87,7 +87,8 @@ data = Node('root')
 
 class TreeNode:
     def __init__(self, area: 'GraphArea', tree: 'Tree', text: str='', parent: 'TreeNode'=None) -> None:
-        self.box = ProgressTextBox(area, text, random.randint(0, 100), filled_color='red')
+        # self.box = ProgressTextBox(area, text, random.randint(0, 100), filled_color='red')
+        self.box: MovableBox = MovableBox()
 
         self.tree: Tree = tree
 
@@ -130,7 +131,6 @@ class TreeNode:
             if self.on_click: self.on_click()
             self.box.is_moving = True
             self.area.draw()
-
 
         def double_press(ev: QMouseEvent):
             if not in_mouse(self, ev): return
@@ -267,7 +267,6 @@ class Tree:
     BETWEEN_Y = 20
 
     def __init__(self, area: 'GraphArea') -> None:
-        # self.roots = [TreeNode(area, self, data)]
         self.roots: list[TreeNode] = []
 
         self.area = area
@@ -368,15 +367,18 @@ class MTGTreeNode(TreeNode):
     def __init__(self, area: 'GraphArea', tree: 'Tree', text: str = '', parent: 'TreeNode' = None) -> None:
         super().__init__(area, tree, text, parent)
 
+        self.box = ProgressTextBox(area, text, random.randint(0, 100), filled_color='red')
+
         def dc():
-            nd = TreeNode(self.area, self.tree, random_node_name(), self)
+            nd = MTGTreeNode(self.area, self.tree, random_node_name(), self)
             nd.x = self.x
             nd.y = self.y + self.box.height() + Tree.BETWEEN_Y
             self.children += [nd]
 
         self.on_double_click = dc
 
-        self.on_click = lambda: print('aa')
+        self.on_click = lambda: self.area.parent_w.set_current_node(self)
+
 
 
 class GraphArea(QWidget):
@@ -429,7 +431,7 @@ class GraphArea(QWidget):
         def do(node: Node, parent: TreeNode=None) -> MTGTreeNode:
             n = MTGTreeNode(self, self.tree, node.name)
             for child in n.children:
-                c = do(child, n)
+                c = do(child, n, parent)
                 n.children += [c]
             return n
         
@@ -632,6 +634,8 @@ class GraphWidget(QWidget):
     def __init__(self, parent: MainWindow) -> None:
         super().__init__()
 
+        self.current_node: MTGTreeNode = None
+
         self.main = parent
 
         self.init_ui()
@@ -642,10 +646,24 @@ class GraphWidget(QWidget):
         self.graph_area = GraphArea(self, data)
 
         # self.selector_editor_area = SelectorWidget(self)
+        self.right = QFormLayout()
+        self.right.setEnabled(False)
+        self.node_name_edit = QLineEdit()
+        self.node_name_edit.textChanged.connect(self.text_changed)
+        self.right.addRow('Label:', self.node_name_edit)
 
         layout.addWidget(self.graph_area, 2)
+        layout.addLayout(self.right, 1)
         # layout.addWidget(self.selector_editor_area, 1)
 
         self.setLayout(layout)
 
-    
+    def set_current_node(self, node: MTGTreeNode):
+        self.right.setEnabled(True)
+        self.current_node = node
+        self.node_name_edit.setText(node.box.label.text())
+
+    def text_changed(self):
+        text = self.node_name_edit.text()
+        self.current_node.set_text(text)
+        self.graph_area.draw()

@@ -10,7 +10,27 @@ def center_pos(x: int, y: int, width: int, height: int, inner_width: int, inner_
     return x + (width - inner_width) // 2, y + (height - inner_height) // 2
 
 
-class TextBox:
+class Box:
+    def __init__(self) -> None:
+        pass
+
+    def draw(self, painter: QPainter, x: int, y: int):
+        pass
+
+    def width(self) -> int:
+        return 0
+    
+    def height(self) -> int:
+        return 0
+    
+
+class MovableBox(Box):
+    def __init__(self) -> None:
+        super().__init__()
+        self.is_moving: bool = False
+
+
+class TextBox(MovableBox):
     fill_color = Qt.green
 
     HOR_PADDING = 10
@@ -19,9 +39,9 @@ class TextBox:
 
     # TODO why can't detect? (sometimes)
     def __init__(self, parent: 'GraphArea', label:str=None) -> None:
-        if not label: label = ''
+        super().__init__()
 
-        self.is_moving: bool = False
+        if not label: label = ''
 
         self.clicked = None
 
