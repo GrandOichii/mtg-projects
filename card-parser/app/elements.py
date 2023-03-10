@@ -10,6 +10,24 @@ from PyQt5.QtCore import *
 from uutil import *
 
 
+class CLabel(QLabel):
+    def __init__(self, parent: 'GraphArea'):
+        super().__init__()
+        self._parent = parent
+
+        self.setMouseTracking(True)
+
+        self.installEventFilter(self)
+
+    def resizeEvent(self, ev: QResizeEvent) -> None:
+        # TODO fix resizing issue
+
+        pixmap = self.pixmap()
+        pixmap=pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.setPixmap(pixmap)
+        self._parent.draw()
+
+
 class CardNameLine(QLineEdit):
     def __init__(self, card_names: list[str]):
         super().__init__()

@@ -256,12 +256,12 @@ class TreeNode:
         for child in self.children:
             child.move(xdiff, ydiff)
 
+
 BETWEEN_X = 20
 BETWEEN_Y = 20
 
 
 class Tree:
-
 
     def __init__(self, area: 'GraphArea') -> None:
         self.roots: list[TreeNode] = []
@@ -331,30 +331,6 @@ class ModMouseEvent:
     def __init__(self, e: QMouseEvent, clicked: bool) -> None:
         self.e = e
         self.clicked = clicked
-
-
-class CLabel(QLabel):
-    mouse = pyqtSignal(ModMouseEvent)
-
-    press = pyqtSignal(QMouseEvent)
-    release = pyqtSignal(QMouseEvent)
-    move = pyqtSignal(QMouseEvent)
-
-    def __init__(self, parent: 'GraphArea'):
-        super().__init__()
-        self._parent = parent
-
-        self.setMouseTracking(True)
-
-        self.installEventFilter(self)
-
-    def resizeEvent(self, ev: QResizeEvent) -> None:
-        # TODO fix resizing issue
-
-        pixmap = self.pixmap()
-        pixmap=pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.setPixmap(pixmap)
-        self._parent.draw()
 
 
 class MTGTree(Tree):
@@ -436,6 +412,7 @@ class MTGTreeMultNode(MTGTreeNode):
         for child in self.sub_nodes:
             child.move(xdiff, ydiff)
 
+
 class GraphArea(QWidget):
     press = pyqtSignal(QMouseEvent)
     double_press = pyqtSignal(QMouseEvent)
@@ -467,7 +444,7 @@ class GraphArea(QWidget):
         # self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         # self.label.setScaledContents(True)
         
-        self.label.mouse.connect(self.mouse_action)
+        # self.label.mouse.connect(self.mouse_action)
         layout.addWidget(self.label)
 
         self.setLayout(layout)
@@ -483,7 +460,7 @@ class GraphArea(QWidget):
         # double click action
         self.tree = MTGTree(self)
 
-        def do(node: MTGObject, parent: TreeNode=None) -> MTGTreeNode:
+        def do(node: MTGObject, parent: MTGTreeNode=None) -> MTGTreeNode:
             n = MTGTreeNode(self, self.tree, node.name)
             for child in n.children:
                 c = do(child, n, parent)
@@ -505,7 +482,6 @@ class GraphArea(QWidget):
         root = MTGTreeMultNode(self, self.tree, 'root', sub_nodes=sub_nodes)
         root.set_initial_loc(200, 10, (BETWEEN_X, BETWEEN_Y))
         self.tree.roots += [root]
-
 
     def draw(self):
         self.tree.draw()
@@ -768,3 +744,26 @@ class GraphWidget(QWidget):
         result = ''
 
         self.parsed_text.setText(result)
+
+'''
+Box - drawable something
+MovebleBox - movable Box (Box)
+TextBox - movable box with text (MovableBox, GraphArea)
+ProgressWrapper (NOT USED) - wrapper for box, shows a progress bar (Box)
+ProgressTextBox - text box with progress bar (GraphArea, TextBox)
+MultiTextBox - text box which has several child text boxes (TextBox, GraphArea)
+
+Tree - a tree object (GraphArea, TreeNode)
+TreeNode - node of a tree (Tree, GraphArea)
+
+CLabel - custom label (GraphArea)
+
+MTGTree - a tree, consisting of MTGTreeNode s (Tree, MTGTreeNode, GraphArea)
+MTGTreeNode - a tree node, containing an MTGObject (MTGTree, GraphArea)
+MTGTreeMultNode - a tree node, containing a Multiple Matcher (MTGTree, MTGTreeNode, GraphArea)
+
+GraphArea - area with a horizontal widget, containing a label with the graph (CLabel, GraphWidget, MTGTree, MTGObject, MTGTreeNode)
+
+GraphWidget - a tab, containing the graph and the editing area (MainWindow, MTGTreeNode)
+
+'''
